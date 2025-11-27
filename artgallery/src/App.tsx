@@ -50,16 +50,10 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
 
-            {/* 🔒 LOGGED-IN USERS ONLY */}
-            <Route
-              path="/cart"
-              element={
-                <RequireAuth>
-                  <CartPage />
-                </RequireAuth>
-              }
-            />
+            {/* 🔓 CART IS NOW PUBLIC */}
+            <Route path="/cart" element={<CartPage />} />
 
+            {/* 🔒 LOGGED-IN USERS ONLY */}
             <Route
               path="/checkout"
               element={
