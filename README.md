@@ -1,7 +1,7 @@
 # 🎨 Art Gallery – Full Stack Web Application
 A modern art marketplace built with React, TypeScript, Node.js, Express & MongoDB.
 
-![Banner](https://via.placeholder.com/1200x350?text=Art+Gallery+Project+Banner)
+
 
 ---
 
