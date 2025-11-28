@@ -1,6 +1,7 @@
-const mongoose = require("mongoose");
+const mongoose = require("mongoose")
 
 const CheckoutSchema = new mongoose.Schema({
+
   firstName: String,
   lastName: String,
   email: String,
@@ -12,9 +13,6 @@ const CheckoutSchema = new mongoose.Schema({
   country: String,
 
   paymentMethod: String,
-  cardNumber: String,
-  expiry: String,
-  cvc: String,
 
   cart: [
     {
@@ -22,7 +20,7 @@ const CheckoutSchema = new mongoose.Schema({
       title: String,
       image: String,
       price: Number,
-      quantity: Number,
+      quantity: Number
     }
   ],
 
@@ -30,7 +28,16 @@ const CheckoutSchema = new mongoose.Schema({
   shipping: Number,
   total: Number,
 
-  createdAt: { type: Date, default: Date.now }
-});
+  status: {
+    type: String,
+    default: "Pending"
+  },
 
-module.exports = mongoose.model("Checkout", CheckoutSchema);
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+
+})
+
+module.exports = mongoose.model("Checkout", CheckoutSchema)

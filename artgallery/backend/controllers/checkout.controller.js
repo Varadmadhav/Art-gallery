@@ -1,22 +1,35 @@
 const Checkout = require("../models/Checkout");
 
-const createCheckout = async (req, res) => {
+exports.createCheckout = async (req, res) => {
   try {
     const data = req.body;
     const saved = await Checkout.create(data);
 
-    return res.json({
+    res.json({
       success: true,
       message: "Checkout saved",
       order: saved
     });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: "Error saving checkout"
     });
   }
 };
 
-module.exports = { createCheckout };
+exports.getAllOrders = async (req, res) => {
+  try {
+    const orders = await Checkout.find().sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      orders
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching orders"
+    });
+  }
+};

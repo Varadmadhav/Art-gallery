@@ -1,25 +1,42 @@
-import { Link } from 'react-router-dom';
-import { ArrowRight, Sparkles } from 'lucide-react';
-import { Button } from '../ui/button';
-import { ArtworkCard } from '../ArtworkCard';
-import { artworks } from '../../data/mockData';
-import { ImageWithFallback } from '../figma/ImageWithFallback';
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { ArrowRight, Sparkles } from 'lucide-react'
+import axios from 'axios'
+import { Button } from '../ui/button'
+import { ArtworkCard } from '../ArtworkCard'
+import { ImageWithFallback } from '../figma/ImageWithFallback'
 
 export function HomePage() {
-  const featuredArtworks = artworks.filter((art) => art.featured);
-  const newArrivals = artworks.filter((art) => art.newArrival).slice(0, 3);
-  const trendingArtworks = artworks.filter((art) => art.trending).slice(0, 4);
+  const [artworks, setArtworks] = useState<any[]>([])
 
-  const collections = [
-    { name: 'Portrait', count: artworks.filter((a) => a.category === 'Portrait').length, image: artworks.find((a) => a.category === 'Portrait')?.image },
-    { name: 'Abstract', count: artworks.filter((a) => a.category === 'Abstract').length, image: artworks.find((a) => a.category === 'Abstract')?.image },
-    { name: 'Nature', count: artworks.filter((a) => a.category === 'Nature').length, image: artworks.find((a) => a.category === 'Nature')?.image },
-    { name: 'Digital Art', count: artworks.filter((a) => a.category === 'Digital Art').length, image: artworks.find((a) => a.category === 'Digital Art')?.image },
-  ];
+  useEffect(() => {
+    const fetchArtworks = async () => {
+      try {
+        const { data } = await axios.get('http://localhost:5000/api/artworks')
+        setArtworks(data)
+      } catch (error) {
+        console.error(error)
+      }
+    }
+
+    fetchArtworks()
+  }, [])
+
+  const featuredArtworks = artworks.filter((art) => art.featured)
+  const newArrivals = artworks.slice(-3)
+  const trendingArtworks = artworks.slice(0, 4)
+
+  const collections = Array.from(new Set(artworks.map(a => a.category))).map(category => {
+    const filtered = artworks.filter(a => a.category === category)
+    return {
+      name: category,
+      count: filtered.length,
+      image: filtered[0]?.image
+    }
+  })
 
   return (
     <div>
-      {/* Hero Section */}
       <section className="relative h-[90vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-neutral-100 to-amber-50">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(217,119,6,0.3),transparent_50%)]" />
@@ -56,7 +73,6 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Artist Introduction */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -92,7 +108,6 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Featured Collections */}
       <section className="py-20 bg-neutral-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
@@ -124,7 +139,6 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* New Arrivals */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-12">
@@ -141,13 +155,12 @@ export function HomePage() {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {newArrivals.map((artwork) => (
-              <ArtworkCard key={artwork.id} artwork={artwork} />
+              <ArtworkCard key={artwork._id} artwork={artwork} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Trending Artworks */}
       <section className="py-20 bg-neutral-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
@@ -158,13 +171,12 @@ export function HomePage() {
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {trendingArtworks.map((artwork) => (
-              <ArtworkCard key={artwork.id} artwork={artwork} />
+              <ArtworkCard key={artwork._id} artwork={artwork} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="py-20 bg-gradient-to-br from-amber-700 to-amber-900 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="font-serif text-white mb-6">Ready to Start Your Collection?</h2>
@@ -189,5 +201,5 @@ export function HomePage() {
         </div>
       </section>
     </div>
-  );
+  )
 }
