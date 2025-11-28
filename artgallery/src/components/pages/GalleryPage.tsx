@@ -19,7 +19,14 @@ export function GalleryPage() {
     const fetchArtworks = async () => {
       try {
         const res = await axios.get('http://localhost:5000/api/artworks')
-        setArtworks(res.data)
+
+        const formatted = res.data.map((artwork: any) => ({
+          ...artwork,
+          id: artwork._id,
+          images: artwork.images?.length ? artwork.images : [artwork.image]
+        }))
+
+        setArtworks(formatted)
       } catch (error) {
         console.log(error)
       }
@@ -52,7 +59,6 @@ export function GalleryPage() {
   return (
     <div className="min-h-screen bg-neutral-50">
 
-      {/* Header */}
       <div className="bg-white border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <h1 className="font-serif text-neutral-900 mb-4">Art Gallery</h1>
@@ -64,7 +70,6 @@ export function GalleryPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
-        {/* Search and Filter Bar */}
         <div className="mb-8">
           <div className="flex flex-col lg:flex-row gap-4">
 
@@ -139,7 +144,7 @@ export function GalleryPage() {
         {filteredArtworks.length > 0 ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             {filteredArtworks.map((artwork) => (
-              <ArtworkCard key={artwork._id} artwork={{...artwork, id: artwork._id}} />
+              <ArtworkCard key={artwork.id} artwork={artwork} />
             ))}
           </div>
         ) : (
