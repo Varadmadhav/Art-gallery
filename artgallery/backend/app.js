@@ -22,7 +22,7 @@ app.use("/api/cart", require("./routes/cart.routes"));
 app.use("/api/order", require("./routes/order.routes"));
 app.use("/api/blog", require("./routes/blog.routes"));
 app.use("/api/commission", require("./routes/commission.routes"));
-
+app.use("/api/checkout", require("./routes/checkout.routes"));
 app.get("/", (req, res) => {
   res.send("✅ ARTGALLERY backend is running...");
 });
