@@ -272,9 +272,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 Subscribe to receive updates on new artworks and exhibitions.
               </p>
               <div className="flex space-x-3">
-                <a href="#" className="w-10 h-10 bg-neutral-800 rounded-full flex items-center justify-center hover:bg-amber-700 transition-colors">
-                  <Instagram className="w-5 h-5" />
-                </a>
+                <a 
+  href="https://www.instagram.com/poojas_creative_palette/?utm_source=ig_web_button_share_sheet" 
+  target="_blank" 
+  rel="noopener noreferrer"
+  className="w-10 h-10 bg-neutral-800 rounded-full flex items-center justify-center hover:bg-amber-700 transition-colors"
+>
+  <Instagram className="w-5 h-5" />
+</a>
+
                 <a href="#" className="w-10 h-10 bg-neutral-800 rounded-full flex items-center justify-center hover:bg-amber-700 transition-colors">
                   <Facebook className="w-5 h-5" />
                 </a>
@@ -289,7 +295,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="border-t border-neutral-800 mt-8 pt-8 text-center text-sm text-neutral-500">
-            © 2024 Pooja Chauhan Fine Art Gallery. All rights reserved.
+            © 2025 Pooja Chauhan Fine Art Gallery. All rights reserved.
           </div>
         </div>
       </footer>
