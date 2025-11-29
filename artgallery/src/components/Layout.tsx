@@ -243,9 +243,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div className="text-white mb-4">Customer Service</div>
               <ul className="space-y-2 text-sm">
                 <li>
-                  <a href="#" className="hover:text-amber-500 transition-colors">
+                  {/* yaha sirf yeh line change ki hai */}
+                  <Link to="/shipping-returns" className="hover:text-amber-500 transition-colors">
                     Shipping & Returns
-                  </a>
+                  </Link>
                 </li>
                 <li>
                   <a href="#" className="hover:text-amber-500 transition-colors">
@@ -273,14 +274,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </p>
               <div className="flex space-x-3">
                 <a
-                  href="https://www.instagram.com/poojas_creative_palette/?utm_source=ig_web_button_share_sheet"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-10 h-10 bg-neutral-800 rounded-full flex items-center justify-center hover:bg-amber-700 transition-colors"
-                >
-                  <Instagram className="w-5 h-5" />
-                </a>
-
+                                  href="https://www.instagram.com/poojas_creative_palette/?utm_source=ig_web_button_share_sheet"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="w-10 h-10 bg-neutral-800 rounded-full flex items-center justify-center hover:bg-amber-700 transition-colors"
+                                >
+                                  <Instagram className="w-5 h-5" />
+                                </a>
+                 
                 <a href="#" className="w-10 h-10 bg-neutral-800 rounded-full flex items-center justify-center hover:bg-amber-700 transition-colors">
                   <Facebook className="w-5 h-5" />
                 </a>
@@ -300,12 +301,30 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           </div>
-
           <div className="border-t border-neutral-800 mt-8 pt-8 text-center text-sm text-neutral-500">
             © 2025 Pooja Chauhan Fine Art Gallery. All rights reserved.
           </div>
         </div>
-      </footer>
-    </div>
+       </footer>
+
+     
+      <a
+        href="https://wa.me/919833325936?text=Hello%2C%20I%20need%20help%20regarding%20an%20artwork"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="whatsapp-btn"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 32 32"
+          fill="currentColor"
+          width="28"
+          height="28"
+        >
+          <path d="M16 .3C7.3.3.3 7.3.3 16c0 2.8.7 5.4 2 7.8L0 32l8.4-2.3c2.3 1.2 4.9 1.9 7.6 1.9 8.7 0 15.7-7 15.7-15.7S24.7.3 16 .3zm0 28.6c-2.4 0-4.8-.7-6.8-1.9l-.5-.3-5 1.4 1.4-4.9-.3-.5c-1.3-2.1-2-4.4-2-6.9C2.8 8 8 2.8 16 2.8s13.2 5.2 13.2 13.2-5.2 13.2-13.2 13.2zm7.2-9.8c-.4-.2-2.3-1.1-2.7-1.2-.4-.2-.7-.2-1 .2-.3.4-1.2 1.2-1.5 1.5-.3.2-.6.3-1 .1-.4-.2-1.7-.6-3.2-2-1.2-1.1-2-2.3-2.3-2.7-.2-.4 0-.7.2-.9.2-.2.4-.6.6-.8s.2-.4.3-.7c.1-.2 0-.5-.1-.7-.2-.2-1-2.4-1.4-3.3-.4-.9-.8-.8-1.1-.8h-.9c-.3 0-.7.1-1 .5-.4.4-1.3 1.3-1.3 3.2 0 1.9 1.4 3.7 1.6 4 .2.3 2.7 4.1 6.5 5.7 3.8 1.6 3.8 1.1 4.4 1 1-.1 2.3-.9 2.6-1.8.3-.9.3-1.7.2-1.8-.1-.1-.4-.2-.8-.4z" />
+        </svg>
+      </a>
+
+    </div>  
   );
 }
