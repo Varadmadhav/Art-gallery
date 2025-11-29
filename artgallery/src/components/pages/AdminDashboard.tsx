@@ -11,8 +11,10 @@ import {
 import { Button } from '../ui/button'
 import { useApp } from '../../context/AppContext'
 import axios from 'axios'
+import { toast } from 'sonner@2.0.3'
 
 type Tab = 'dashboard' | 'artworks' | 'orders'
+type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
 
 export function AdminDashboard() {
   const { user } = useApp()
@@ -56,7 +58,7 @@ export function AdminDashboard() {
         }))
 
         setArtworks(formatted)
-        setOrders(ordersRes.data.orders)
+        setOrders(ordersRes.data.orders || ordersRes.data)
       } catch (error) {
         console.log(error)
       } finally {
@@ -115,12 +117,16 @@ export function AdminDashboard() {
 
     try {
       if (editingArtwork) {
-        const res = await axios.put(`http://localhost:5000/api/artworks/${editingArtwork.id}`, data, {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-            'Content-Type': 'multipart/form-data'
+        const res = await axios.put(
+          `http://localhost:5000/api/artworks/${editingArtwork.id}`,
+          data,
+          {
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+              'Content-Type': 'multipart/form-data'
+            }
           }
-        })
+        )
 
         const updated = { ...res.data, id: res.data._id }
         setArtworks(prev => prev.map(a => (a.id === updated.id ? updated : a)))
@@ -151,35 +157,74 @@ export function AdminDashboard() {
     }
   }
 
+  // ✅ FIXED: FRONTEND NOW CALLS CORRECT BACKEND ROUTE
+  const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
+    try {
+      await axios.put(
+        `http://localhost:5000/api/checkout/${orderId}/status`,
+        { status: newStatus },
+        tokenHeader
+      )
+
+      setOrders(prev =>
+        prev.map(o =>
+          o._id === orderId ? { ...o, status: newStatus } : o
+        )
+      )
+
+      toast.success('Order status updated')
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to update order status')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-neutral-50">
       <div className="max-w-7xl mx-auto px-4 py-12">
         <h1 className="font-serif text-neutral-900 mb-8">Admin Dashboard</h1>
 
         <div className="grid lg:grid-cols-5 gap-6">
-
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl p-4 shadow-sm">
               <nav className="space-y-2">
-
-                <button onClick={() => setActiveTab('dashboard')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg ${activeTab === 'dashboard' ? 'bg-amber-100 text-amber-900' : 'text-neutral-700'}`}>
+                <button
+                  onClick={() => setActiveTab('dashboard')}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg ${
+                    activeTab === 'dashboard'
+                      ? 'bg-amber-100 text-amber-900'
+                      : 'text-neutral-700'
+                  }`}
+                >
                   <LayoutDashboard className="w-5 h-5" /> Dashboard
                 </button>
 
-                <button onClick={() => setActiveTab('artworks')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg ${activeTab === 'artworks' ? 'bg-amber-100 text-amber-900' : 'text-neutral-700'}`}>
+                <button
+                  onClick={() => setActiveTab('artworks')}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg ${
+                    activeTab === 'artworks'
+                      ? 'bg-amber-100 text-amber-900'
+                      : 'text-neutral-700'
+                  }`}
+                >
                   <Package className="w-5 h-5" /> Artworks
                 </button>
 
-                <button onClick={() => setActiveTab('orders')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg ${activeTab === 'orders' ? 'bg-amber-100 text-amber-900' : 'text-neutral-700'}`}>
+                <button
+                  onClick={() => setActiveTab('orders')}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg ${
+                    activeTab === 'orders'
+                      ? 'bg-amber-100 text-amber-900'
+                      : 'text-neutral-700'
+                  }`}
+                >
                   <ShoppingCart className="w-5 h-5" /> Orders
                 </button>
-
               </nav>
             </div>
           </div>
 
           <div className="lg:col-span-4">
-
             {activeTab === 'dashboard' && (
               <div className="grid md:grid-cols-3 gap-6">
                 <div className="bg-white p-6 rounded-2xl shadow-sm">
@@ -193,7 +238,9 @@ export function AdminDashboard() {
                 </div>
 
                 <div className="bg-white p-6 rounded-2xl shadow-sm">
-                  <div className="text-2xl font-serif">₹{orders.reduce((s,o)=>s+o.total,0)}</div>
+                  <div className="text-2xl font-serif">
+                    ₹{orders.reduce((s, o) => s + (o.total || 0), 0)}
+                  </div>
                   <div className="text-sm text-neutral-500">Revenue</div>
                 </div>
               </div>
@@ -204,22 +251,42 @@ export function AdminDashboard() {
                 <div className="flex justify-between mb-6">
                   <h2 className="font-serif text-neutral-900">Manage Artworks</h2>
 
-                  <Button className="bg-amber-700 hover:bg-amber-800" onClick={openAddModal}>
+                  <Button
+                    className="bg-amber-700 hover:bg-amber-800"
+                    onClick={openAddModal}
+                  >
                     <Plus className="w-5 h-5 mr-2" /> Add Artwork
                   </Button>
                 </div>
 
                 {artworks.map(art => (
-                  <div key={art.id} className="flex items-center gap-4 p-4 mb-4 border border-neutral-200 rounded-xl">
-                    <img src={art.image} className="w-20 h-20 rounded-lg object-cover" />
+                  <div
+                    key={art.id}
+                    className="flex items-center gap-4 p-4 mb-4 border border-neutral-200 rounded-xl"
+                  >
+                    <img
+                      src={art.image}
+                      className="w-20 h-20 rounded-lg object-cover"
+                    />
                     <div className="flex-1">
                       <h3>{art.title}</h3>
-                      <p className="text-sm text-neutral-600">{art.category} · ₹{art.price}</p>
+                      <p className="text-sm text-neutral-600">
+                        {art.category} · ₹{art.price}
+                      </p>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => openEditModal(art)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openEditModal(art)}
+                    >
                       <Edit2 className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-red-600" onClick={() => deleteArtwork(art.id)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600"
+                      onClick={() => deleteArtwork(art.id)}
+                    >
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -230,7 +297,7 @@ export function AdminDashboard() {
             {activeTab === 'orders' && (
               <div className="bg-white rounded-2xl p-6 shadow-sm">
                 <h2 className="font-serif text-neutral-900 mb-6">Orders</h2>
-                <table className="w-full">
+                <table className="w-full text-sm">
                   <thead>
                     <tr>
                       <th className="text-left p-2">Customer</th>
@@ -240,19 +307,39 @@ export function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {orders.map((o) => (
+                    {orders.map(o => (
                       <tr key={o._id} className="border-t">
-                        <td className="p-2">{o.firstName} {o.lastName}</td>
-                        <td className="p-2">{o.cart.map((c:any)=>c.title).join(', ')}</td>
+                        <td className="p-2">
+                          {o.firstName} {o.lastName}
+                        </td>
+                        <td className="p-2">
+                          {o.cart?.map((c: any) => c.title).join(', ')}
+                        </td>
                         <td className="p-2">₹{o.total}</td>
-                        <td className="p-2 capitalize">{o.status}</td>
+                        <td className="p-2">
+                          <select
+                            value={o.status?.toLowerCase() || "pending"}
+                            onChange={e =>
+                              handleStatusChange(
+                                o._id,
+                                e.target.value as OrderStatus
+                              )
+                            }
+                            className="border border-neutral-300 rounded-lg px-2 py-1 text-sm bg-white"
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="processing">Processing</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             )}
-
           </div>
         </div>
       </div>
@@ -260,22 +347,48 @@ export function AdminDashboard() {
       {showModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999]">
           <div className="bg-white p-6 rounded-xl w-full max-w-md shadow-2xl">
-            <h2 className="font-serif mb-4">{editingArtwork ? 'Edit Artwork' : 'Add Artwork'}</h2>
+            <h2 className="font-serif mb-4">
+              {editingArtwork ? 'Edit Artwork' : 'Add Artwork'}
+            </h2>
 
-            <input name="title" value={form.title} onChange={handleChange} placeholder="Title" className="w-full border p-2 rounded mb-3" />
-            <input name="category" value={form.category} onChange={handleChange} placeholder="Category" className="w-full border p-2 rounded mb-3" />
-            <input name="price" value={form.price} onChange={handleChange} placeholder="Price" className="w-full border p-2 rounded mb-3" />
+            <input
+              name="title"
+              value={form.title}
+              onChange={handleChange}
+              placeholder="Title"
+              className="w-full border p-2 rounded mb-3"
+            />
+            <input
+              name="category"
+              value={form.category}
+              onChange={handleChange}
+              placeholder="Category"
+              className="w-full border p-2 rounded mb-3"
+            />
+            <input
+              name="price"
+              value={form.price}
+              onChange={handleChange}
+              placeholder="Price"
+              className="w-full border p-2 rounded mb-3"
+            />
 
             <input type="file" onChange={handleImage} className="mb-4" />
 
             <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={()=>setShowModal(false)}>Cancel</Button>
-              <Button className="bg-amber-700 hover:bg-amber-800" onClick={handleSave}>Save</Button>
+              <Button variant="outline" onClick={() => setShowModal(false)}>
+                Cancel
+              </Button>
+              <Button
+                className="bg-amber-700 hover:bg-amber-800"
+                onClick={handleSave}
+              >
+                Save
+              </Button>
             </div>
           </div>
         </div>
       )}
-
     </div>
   )
 }

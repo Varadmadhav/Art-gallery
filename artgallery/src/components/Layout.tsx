@@ -26,7 +26,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </div>
               <div className="hidden sm:block">
                 <div className="font-serif text-neutral-900">Pooja Chauhan</div>
-                <div className="text-xs text-neutral-500">Fine Art Gallery</div>
+                <div className="text-xs text-neutral-500">Pooja's Art Gallery</div>
               </div>
             </Link>
 
@@ -272,14 +272,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 Subscribe to receive updates on new artworks and exhibitions.
               </p>
               <div className="flex space-x-3">
-                <a 
-  href="https://www.instagram.com/poojas_creative_palette/?utm_source=ig_web_button_share_sheet" 
-  target="_blank" 
-  rel="noopener noreferrer"
-  className="w-10 h-10 bg-neutral-800 rounded-full flex items-center justify-center hover:bg-amber-700 transition-colors"
->
-  <Instagram className="w-5 h-5" />
-</a>
+                <a
+                  href="https://www.instagram.com/poojas_creative_palette/?utm_source=ig_web_button_share_sheet"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 bg-neutral-800 rounded-full flex items-center justify-center hover:bg-amber-700 transition-colors"
+                >
+                  <Instagram className="w-5 h-5" />
+                </a>
 
                 <a href="#" className="w-10 h-10 bg-neutral-800 rounded-full flex items-center justify-center hover:bg-amber-700 transition-colors">
                   <Facebook className="w-5 h-5" />
@@ -287,7 +287,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <a href="#" className="w-10 h-10 bg-neutral-800 rounded-full flex items-center justify-center hover:bg-amber-700 transition-colors">
                   <Twitter className="w-5 h-5" />
                 </a>
-                <a href="#" className="w-10 h-10 bg-neutral-800 rounded-full flex items-center justify-center hover:bg-amber-700 transition-colors">
+                
+                {/* Updated: Direct Gmail Compose Link */}
+                <a 
+                  href="https://mail.google.com/mail/?view=cm&fs=1&to=poojascreativepalette@gmail.com"
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 bg-neutral-800 rounded-full flex items-center justify-center hover:bg-amber-700 transition-colors"
+                >
                   <Mail className="w-5 h-5" />
                 </a>
               </div>
