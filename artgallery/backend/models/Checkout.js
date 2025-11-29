@@ -1,7 +1,6 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
 
 const CheckoutSchema = new mongoose.Schema({
-
   firstName: String,
   lastName: String,
   email: String,
@@ -20,24 +19,25 @@ const CheckoutSchema = new mongoose.Schema({
       title: String,
       image: String,
       price: Number,
-      quantity: Number
-    }
+      quantity: Number,
+    },
   ],
 
   subtotal: Number,
   shipping: Number,
   total: Number,
 
+  // IMPORTANT: lowercase status values for consistency
   status: {
     type: String,
-    default: "Pending"
+    enum: ["pending", "processing", "shipped", "delivered", "cancelled"],
+    default: "pending",
   },
 
   createdAt: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
+});
 
-})
-
-module.exports = mongoose.model("Checkout", CheckoutSchema)
+module.exports = mongoose.model("Checkout", CheckoutSchema);

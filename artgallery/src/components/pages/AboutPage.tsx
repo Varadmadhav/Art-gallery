@@ -30,11 +30,14 @@ export function AboutPage() {
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <div className="relative h-[60vh] overflow-hidden bg-neutral-900">
-        <ImageWithFallback
-          src="https://images.unsplash.com/photo-1758267928035-6716c00ff3c1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhcnRpc3QlMjBwb3J0cmFpdCUyMHN0dWRpb3xlbnwxfHx8fDE3NjM5MjI1MTR8MA&ixlib=rb-4.1.0&q=80&w=1080"
-          alt="Pooja Chauhan in studio"
-          className="w-full h-full object-cover opacity-50"
-        />
+       <ImageWithFallback
+  src="https://res.cloudinary.com/dql5knfxm/image/upload/v1764399442/Gemini_Generated_Image_6guy0o6guy0o6guy_egjxc6.png"
+  alt="Pooja Chauhan in studio"
+  className="w-full h-full object-cover opacity-50"
+ />
+
+
+
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center text-white max-w-3xl px-4">
             <h1 className="font-serif mb-4">About Pooja Chauhan</h1>
@@ -50,28 +53,36 @@ export function AboutPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="prose prose-lg max-w-none">
             <h2 className="font-serif text-neutral-900 mb-6">My Journey</h2>
-            <p className="text-neutral-700 mb-6">
-              Art has been my lifelong passion and calling. Born in 1985 in Seattle, I grew up surrounded by the 
-              natural beauty of the Pacific Northwest, which continues to influence my work today. I received my 
-              BFA from the Rhode Island School of Design in 2007, where I developed my signature style blending 
-              abstract expressionism with contemporary techniques.
-            </p>
-            <p className="text-neutral-700 mb-6">
-              My artistic practice centers on exploring the relationship between color, texture, and emotion. 
-              Each piece I create is an investigation into how visual elements can evoke feelings and tell stories 
-              without words. I work primarily in acrylics and mixed media, often incorporating unexpected materials 
-              to add depth and dimension to my canvases.
-            </p>
-            <p className="text-neutral-700 mb-6">
-              Over the past 15 years, my work has been exhibited in galleries across the United States and collected 
-              by art enthusiasts worldwide. I believe that art should be accessible and meaningful, which is why I'm 
-              passionate about creating pieces that resonate with people on a personal level.
-            </p>
-            <p className="text-neutral-700">
-              When I'm not in my studio, I enjoy teaching workshops, mentoring emerging artists, and exploring new 
-              techniques that push the boundaries of my creative practice. I currently live and work in Brooklyn, 
-              New York, where I maintain a studio that's open by appointment for collectors and fellow art lovers.
-            </p>
+
+<p className="text-neutral-700 mb-6">
+  My artistic journey began long before I ever held a professional canvas. From childhood, I found myself drawn 
+  to colors, patterns, and stories expressed through traditional Indian art. This early fascination slowly grew 
+  into a passion that shaped my identity and my purpose as an artist.
+</p>
+
+<p className="text-neutral-700 mb-6">
+  Over the years, I dedicated myself to learning, experimenting, and refining my skills. I successfully completed 
+  both my Elementary and Intermediate art examinations, and during my school years, I participated in and won 
+  numerous art competitions—each one strengthening my confidence and encouraging me to pursue art more seriously.
+</p>
+
+<p className="text-neutral-700 mb-6">
+  As I continued exploring different mediums—painting, sketching, mixed media, and contemporary styles—I found 
+  my creative voice rooted in Indian cultural expression. Whether I am working with bold strokes or delicate 
+  details, my work always carries a touch of Indian tradition blended with modern storytelling.
+</p>
+
+<p className="text-neutral-700 mb-6">
+  What began as a childhood passion has now grown into a committed artistic practice. I believe that creativity 
+  has no boundaries, and each artwork I create reflects my journey, my heritage, and my desire to express the 
+  beauty and depth of human emotion.
+</p>
+
+<p className="text-neutral-700">
+  Today, I continue to explore new ideas, experiment with innovative techniques, and push myself as an artist 
+  with every piece I create. My goal is simple—to craft art that resonates, inspires, and speaks to the soul.
+</p>
+
           </div>
         </div>
       </section>
@@ -183,16 +194,25 @@ export function AboutPage() {
             I'd love to hear from you.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/commission">
-              <Button className="bg-white text-amber-900 hover:bg-neutral-100 rounded-lg px-8 py-6">
-                Commission Artwork
-              </Button>
-            </Link>
-            <Link to="/gallery">
-              <Button variant="outline" className="border-white text-white hover:bg-white/10 rounded-lg px-8 py-6">
-                View Gallery
-              </Button>
-            </Link>
+             {/* Commission Artwork Button */}
+  <Link to="/commission">
+  <Button
+    variant="outline"
+    className="bg-white text-amber-900 hover:bg-neutral-100 rounded-lg px-8 py-6 border-white transition-colors duration-300"
+  >
+    Request Commission
+  </Button>
+</Link>
+
+<Link to="/gallery">
+  <Button
+    variant="outline"
+    className="bg-white text-amber-900 hover:bg-neutral-100 rounded-lg px-8 py-6 border-white transition-colors duration-300"
+  >
+    View Gallery
+  </Button>
+</Link>
+
           </div>
         </div>
       </section>

@@ -9,7 +9,7 @@ import { ImageWithFallback } from '../figma/ImageWithFallback'
 export function HomePage() {
   const [artworks, setArtworks] = useState<any[]>([])
 
-  // ⭐ ADD THIS: On mount, trigger splash animation
+  // ⭐ Splash animation logic
   useEffect(() => {
     const splash = document.getElementById("bg-splash")
     if (splash) {
@@ -36,35 +36,44 @@ export function HomePage() {
     fetchArtworks()
   }, [])
 
-  const featuredArtworks = artworks.filter((art) => art.featured)
-  const newArrivals = artworks.slice(-3)
   const trendingArtworks = artworks.slice(0, 4)
-
-  const collections = Array.from(new Set(artworks.map(a => a.category))).map(category => {
-    const filtered = artworks.filter(a => a.category === category)
-    return {
-      name: category,
-      count: filtered.length,
-      image: filtered[0]?.image
-    }
-  })
 
   return (
     <div>
 
-      {/* ⭐ NEW SPLASH ANIMATION DIV */}
+      {/* ⭐ SPLASH ANIMATION DIV */}
       <div
-    id="bg-splash"
-    className="pointer-events-none fixed left-1/2 top-1/2 z-[9999] bg-amber-600 rounded-full opacity-100 splash-start">
-      
-    </div>
+        id="bg-splash"
+        className="pointer-events-none fixed left-1/2 top-1/2 z-[9999] bg-amber-600 rounded-full opacity-100 splash-start">
+      </div>
 
-      {/* MAIN CONTENT */}
-      <section className="relative h-[90vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-neutral-100 to-amber-50">
-        <div className="absolute inset-0 opacity-10">
+      {/* ⭐ MAIN HERO SECTION WITH VIDEO BACKGROUND */}
+      <section className="relative h-[90vh] flex items-center justify-center overflow-hidden bg-neutral-100">
+        
+        {/* 1. BACKGROUND VIDEO */}
+        <video 
+          autoPlay 
+          muted 
+          loop 
+          playsInline 
+          className="absolute inset-0 w-full h-full object-cover z-0"
+        >
+          <source 
+            src="https://res.cloudinary.com/dql5knfxm/video/upload/v1764403169/Watercolor_Splash_Animation_Generated_n16lhd.mp4" 
+            type="video/mp4" 
+          />
+        </video>
+
+        {/* 2. OVERLAY (Makes text readable over video) */}
+        {/* Adjust 'bg-white/80' to 'bg-white/60' if you want to see more video, or 'bg-black/50' if you want dark mode */}
+        <div className="absolute inset-0 bg-white/80 z-0" />
+
+        {/* 3. OPTIONAL PATTERN OVERLAY (From your original code) */}
+        <div className="absolute inset-0 opacity-10 z-0">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(217,119,6,0.3),transparent_50%)]" />
         </div>
 
+        {/* CONTENT (Relative z-10 ensures it sits ON TOP of the video) */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-4xl mx-auto">
 
@@ -77,8 +86,8 @@ export function HomePage() {
               Discover Original Artwork That Speaks to Your Soul
             </h1>
 
-            <p className="text-neutral-600 mb-8 max-w-2xl mx-auto">
-              Explore a curated collection of contemporary paintings by Pooja Chauhan. Each piece is an original work of art, created with passion and precision to transform your space.
+            <p className="text-neutral-600 mb-8 max-w-2xl mx-auto font-medium">
+              Explore a curated collection of contemporary paintings by Pooja Chauhan. Each piece is an original work of art, created with passion and precision.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -92,7 +101,7 @@ export function HomePage() {
               <Link to="/commission">
                 <Button
                   variant="outline"
-                  className="bg-white text-amber-900 hover:bg-neutral-100 rounded-lg px-8 py-6 border-white"
+                  className="bg-white/80 backdrop-blur text-amber-900 hover:bg-white rounded-lg px-8 py-6 border-white"
                 >
                   Request Commission
                 </Button>
@@ -103,14 +112,14 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* REST OF YOUR ORIGINAL PAGE EXACT SAME 👇 */}
+      {/* REST OF YOUR PAGE (UNCHANGED) */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="relative">
               <div className="aspect-[4/5] rounded-2xl overflow-hidden shadow-2xl">
                 <ImageWithFallback
-                  src="https://images.unsplash.com/photo-1758267928035-6716c00ff3c1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhcnRpc3QlMjBwb3J0cmFpdCUyMHN0dWRpb3xlbnwxfHx8fDE3NjM5MjI1MTR8MA&ixlib=rb-4.1.0&q=80&w=1080"
+                  src="https://res.cloudinary.com/dql5knfxm/image/upload/v1764398434/WhatsApp_Image_2025-11-29_at_12.00.40_PM_mh1qce.jpg"
                   alt="Pooja Chauhan"
                   className="w-full h-full object-cover"
                 />
@@ -138,13 +147,6 @@ export function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Rest of your sections SAME */}
-      {/* Collections */}
-      {/* New Arrivals */}
-      {/* Trending */}
-      {/* CTA */}
-      {/* ... unchanged code ... */}
 
       <section className="py-20 bg-neutral-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
