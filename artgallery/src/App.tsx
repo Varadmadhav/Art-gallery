@@ -17,6 +17,9 @@ import { AppProvider, useApp } from './context/AppContext';
 import { NewsletterPopup } from './components/NewsletterPopup';
 import { Toaster } from './components/ui/sonner';
 
+// ⭐ NEW IMPORT FOR SHIPPING PAGE
+import ShippingReturnsPage from './components/pages/ShippingReturnsPage';
+
 // 🔒 LOGIN REQUIRED
 function RequireAuth({ children }: { children: JSX.Element }) {
   const { user } = useApp();
@@ -24,7 +27,7 @@ function RequireAuth({ children }: { children: JSX.Element }) {
   return children;
 }
 
-// 🔒 ADMIN ONLY ROUTE
+// 🔒 ADMIN ONLY
 function RequireAdmin({ children }: { children: JSX.Element }) {
   const { user } = useApp();
   if (!user) return <Navigate to="/login" replace />;
@@ -50,7 +53,10 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
 
-            {/* 🔓 CART IS NOW PUBLIC */}
+            {/* ⭐ NEW SHIPPING & RETURNS ROUTE */}
+            <Route path="/shipping-returns" element={<ShippingReturnsPage />} />
+
+            {/* 🔓 CART IS PUBLIC */}
             <Route path="/cart" element={<CartPage />} />
 
             {/* 🔒 LOGGED-IN USERS ONLY */}
