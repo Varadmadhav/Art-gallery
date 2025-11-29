@@ -63,21 +63,6 @@
   --border: oklch(0.269 0 0);
   --input: oklch(0.269 0 0);
   --ring: oklch(0.439 0 0);
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
 }
 
 @theme inline {
@@ -102,11 +87,6 @@
   --color-input-background: var(--input-background);
   --color-switch-background: var(--switch-background);
   --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -131,66 +111,6 @@
   }
 }
 
-/**
- * Base typography. This is not applied to elements which have an ancestor with a Tailwind text class.
- */
-@layer base {
-  :where(:not(:has([class*=' text-']), :not(:has([class^='text-'])))) {
-    h1 {
-      font-size: var(--text-2xl);
-      font-weight: var(--font-weight-medium);
-      line-height: 1.5;
-    }
-
-    h2 {
-      font-size: var(--text-xl);
-      font-weight: var(--font-weight-medium);
-      line-height: 1.5;
-    }
-
-    h3 {
-      font-size: var(--text-lg);
-      font-weight: var(--font-weight-medium);
-      line-height: 1.5;
-    }
-
-    h4 {
-      font-size: var(--text-base);
-      font-weight: var(--font-weight-medium);
-      line-height: 1.5;
-    }
-
-    p {
-      font-size: var(--text-base);
-      font-weight: var(--font-weight-normal);
-      line-height: 1.5;
-    }
-
-    label {
-      font-size: var(--text-base);
-      font-weight: var(--font-weight-medium);
-      line-height: 1.5;
-    }
-
-    button {
-      font-size: var(--text-base);
-      font-weight: var(--font-weight-medium);
-      line-height: 1.5;
-    }
-
-    input {
-      font-size: var(--text-base);
-      font-weight: var(--font-weight-normal);
-      line-height: 1.5;
-    }
-  }
-}
-
-html {
-  font-size: var(--font-size);
-}
-
-/* Gallery-specific styles */
 @layer base {
   body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -234,4 +154,87 @@ html {
     opacity: 1;
     transform: scale(1);
   }
+}
+
+/* --------------------------------------------- */
+/* 🔥 FIXED HOMEPAGE SPLASH (WITH !IMPORTANT)  */
+/* --------------------------------------------- */
+
+#bg-splash {
+  position: fixed !important;
+  left: 50% !important;
+  top: 50% !important;
+  width: 250px !important;
+  height: 250px !important;
+  transform: translate(-50%, -50%) scale(1) !important;
+  background: #b45309 !important; /* amber-600 */
+  border-radius: 9999px !important;
+  z-index: 9999 !important;
+  opacity: 1 !important;
+  transition: transform 1s ease-out, opacity 0.8s ease-in-out !important;
+}
+
+/* splash expands */
+.splash-expand {
+  transform: translate(-50%, -50%) scale(7) !important;
+}
+
+/* splash fades out */
+.splash-fade {
+  opacity: 0 !important;
+}
+
+/* Prevent flicker horizontal scroll */
+html, body {
+  overflow-x: hidden !important;
+}
+
+/* --------------------------------------------- */
+/* 🔥 HERO FADE-UP ANIMATION */
+/* --------------------------------------------- */
+.hero-fade {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: heroFadeUp 1s ease-out 1.1s forwards;
+}
+
+@keyframes heroFadeUp {
+  to {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+}
+
+
+/* WhatsApp Bounce Animation */
+@keyframes wabounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.whatsapp-btn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  background: #25D366;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+  cursor: pointer;
+  animation: wabounce 1.5s infinite;
+  z-index: 9999;
+  transition: 0.2s;
+}
+
+.whatsapp-btn:hover {
+  background: #1ebe5d;
 }
