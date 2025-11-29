@@ -6,13 +6,13 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { useApp } from '../../context/AppContext';
 import { toast } from 'sonner@2.0.3';
+import axios from "axios";
 
 export function CheckoutPage() {
   const { cart, clearCart } = useApp();
   const navigate = useNavigate();
   const [paymentMethod, setPaymentMethod] = useState('stripe');
 
-  // ⭐ FORM STATE
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -28,7 +28,6 @@ export function CheckoutPage() {
     cvc: ""
   });
 
-  // ⭐ Input Handler
   const updateForm = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.id]: e.target.value });
   };
@@ -37,9 +36,44 @@ export function CheckoutPage() {
   const shipping = subtotal > 1500 ? 0 : 50;
   const total = subtotal + shipping;
 
-  // ⭐ UPDATED handleSubmit → Backend Call
+  const handleRazorpayPayment = async () => {
+    const createOrder = await axios.post("http://localhost:5000/api/payment/create-order", {
+      amount: total
+    });
+
+    const { VITE_RAZORPAY_KEY_ID } = import.meta.env;
+
+    const options = {
+      key: VITE_RAZORPAY_KEY_ID,
+      amount: createOrder.data.amount,
+      currency: "INR",
+      name: "ArtGallery",
+      order_id: createOrder.data.id,
+      handler: async function (response: any) {
+        const verify = await axios.post("http://localhost:5000/api/payment/verify-payment", response);
+
+        if (verify.data.status === "success") {
+          toast.success("Payment Successful!");
+
+          clearCart();
+          navigate("/");
+        } else {
+          toast.error("Payment verification failed!");
+        }
+      }
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (paymentMethod === "razorpay") {
+      handleRazorpayPayment();
+      return;
+    }
 
     const orderData = {
       ...form,
@@ -91,7 +125,6 @@ export function CheckoutPage() {
         <form onSubmit={handleSubmit}>
           <div className="grid lg:grid-cols-3 gap-8">
 
-            {/* Shipping Information */}
             <div className="lg:col-span-2 space-y-6">
 
               <div className="bg-white rounded-2xl p-6 shadow-sm">
@@ -145,7 +178,6 @@ export function CheckoutPage() {
                 </div>
               </div>
 
-              {/* Payment Method */}
               <div className="bg-white rounded-2xl p-6 shadow-sm">
                 <h2 className="font-serif text-neutral-900 mb-6">Payment Method</h2>
 
@@ -216,7 +248,6 @@ export function CheckoutPage() {
               </div>
             </div>
 
-            {/* Order Summary */}
             <div className="lg:col-span-1">
               <div className="bg-white rounded-2xl p-6 shadow-sm sticky top-24">
                 <h2 className="font-serif text-neutral-900 mb-6">Order Summary</h2>
