@@ -161,8 +161,9 @@ export function ArtworkDetailPage() {
           <div className="flex-1 space-y-6">
             <h1 className="text-3xl font-serif">{artwork.title}</h1>
 
+            {/* ✅ RUPEE SYMBOL APPLIED */}
             <div className="text-2xl text-amber-700 font-semibold">
-              ${artwork.price}
+              ₹{artwork.price}
             </div>
 
             <p className="text-neutral-600">{artwork.description}</p>
@@ -175,7 +176,8 @@ export function ArtworkDetailPage() {
                 <b>Size:</b> {artwork.size}
               </div>
               <div>
-                <b>Status:</b> {artwork.availability}</div>
+                <b>Status:</b> {artwork.availability}
+              </div>
             </div>
 
             {artwork.availability === 'available' && (

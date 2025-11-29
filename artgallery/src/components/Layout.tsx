@@ -26,7 +26,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </div>
               <div className="hidden sm:block">
                 <div className="font-serif text-neutral-900">Pooja Chauhan</div>
-                <div className="text-xs text-neutral-500">Fine Art Gallery</div>
+                <div className="text-xs text-neutral-500">Pooja's Art Gallery</div>
               </div>
             </Link>
 

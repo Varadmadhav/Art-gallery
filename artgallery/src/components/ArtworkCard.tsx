@@ -104,7 +104,7 @@ export function ArtworkCard({ artwork }: ArtworkCardProps) {
 
             <div className="text-right">
               <div className="font-serif text-amber-700">
-                ${artwork.price.toLocaleString()}
+                ₹{artwork.price.toLocaleString()}
               </div>
             </div>
           </div>
