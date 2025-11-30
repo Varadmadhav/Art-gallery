@@ -14,7 +14,13 @@ import axios from 'axios'
 import { toast } from 'sonner@2.0.3'
 
 type Tab = 'dashboard' | 'artworks' | 'orders'
-type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+type OrderStatus =
+  | 'PLACED'
+  | 'CONFIRMED'
+  | 'SHIPPED'
+  | 'DELIVERED'
+  | 'CANCELLED'
+  | 'RETURNED'
 
 export function AdminDashboard() {
   const { user } = useApp()
@@ -35,6 +41,7 @@ export function AdminDashboard() {
     imageFile: null as File | null
   })
 
+  // Protect route
   if (!user || !user.isAdmin) {
     navigate('/login')
     return null
@@ -46,11 +53,17 @@ export function AdminDashboard() {
     }
   }
 
+  // ------------------------------------------------------------
+  // FETCH ARTWORKS + ORDERS
+  // ------------------------------------------------------------
   useEffect(() => {
     const fetchData = async () => {
       try {
         const artworksRes = await axios.get('http://localhost:5000/api/artworks')
-        const ordersRes = await axios.get('http://localhost:5000/api/checkout')
+
+        const ordersRes = await axios.get(
+          'http://localhost:5000/api/order/admin/all'
+        )
 
         const formatted = artworksRes.data.map((a: any) => ({
           ...a,
@@ -58,7 +71,7 @@ export function AdminDashboard() {
         }))
 
         setArtworks(formatted)
-        setOrders(ordersRes.data.orders || ordersRes.data)
+        setOrders(ordersRes.data.orders)
       } catch (error) {
         console.log(error)
       } finally {
@@ -77,6 +90,9 @@ export function AdminDashboard() {
     )
   }
 
+  // ------------------------------------------------------------
+  // ARTWORK ADD / EDIT
+  // ------------------------------------------------------------
   const openAddModal = () => {
     setEditingArtwork(null)
     setForm({ title: '', category: '', price: '', imageFile: null })
@@ -157,18 +173,20 @@ export function AdminDashboard() {
     }
   }
 
-  // ✅ FIXED: FRONTEND NOW CALLS CORRECT BACKEND ROUTE
+  // ------------------------------------------------------------
+  // UPDATE ORDER STATUS (NEW AMAZON-STYLE API)
+  // ------------------------------------------------------------
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
     try {
       await axios.put(
-        `http://localhost:5000/api/checkout/${orderId}/status`,
+        `http://localhost:5000/api/order/status/${orderId}`,
         { status: newStatus },
         tokenHeader
       )
 
       setOrders(prev =>
         prev.map(o =>
-          o._id === orderId ? { ...o, status: newStatus } : o
+          o.orderId === orderId ? { ...o, orderStatus: newStatus } : o
         )
       )
 
@@ -185,6 +203,7 @@ export function AdminDashboard() {
         <h1 className="font-serif text-neutral-900 mb-8">Admin Dashboard</h1>
 
         <div className="grid lg:grid-cols-5 gap-6">
+          {/* Left Menu */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-2xl p-4 shadow-sm">
               <nav className="space-y-2">
@@ -224,7 +243,11 @@ export function AdminDashboard() {
             </div>
           </div>
 
+          {/* Right Content */}
           <div className="lg:col-span-4">
+            {/* --------------------------------------------------
+                DASHBOARD TAB
+            --------------------------------------------------- */}
             {activeTab === 'dashboard' && (
               <div className="grid md:grid-cols-3 gap-6">
                 <div className="bg-white p-6 rounded-2xl shadow-sm">
@@ -239,13 +262,16 @@ export function AdminDashboard() {
 
                 <div className="bg-white p-6 rounded-2xl shadow-sm">
                   <div className="text-2xl font-serif">
-                    ₹{orders.reduce((s, o) => s + (o.total || 0), 0)}
+                    ₹{orders.reduce((s, o) => s + (o.totalAmount || 0), 0)}
                   </div>
                   <div className="text-sm text-neutral-500">Revenue</div>
                 </div>
               </div>
             )}
 
+            {/* --------------------------------------------------
+                ARTWORKS TAB
+            --------------------------------------------------- */}
             {activeTab === 'artworks' && (
               <div className="bg-white rounded-2xl p-6 shadow-sm">
                 <div className="flex justify-between mb-6">
@@ -294,6 +320,9 @@ export function AdminDashboard() {
               </div>
             )}
 
+            {/* --------------------------------------------------
+                ORDERS TAB
+            --------------------------------------------------- */}
             {activeTab === 'orders' && (
               <div className="bg-white rounded-2xl p-6 shadow-sm">
                 <h2 className="font-serif text-neutral-900 mb-6">Orders</h2>
@@ -310,28 +339,33 @@ export function AdminDashboard() {
                     {orders.map(o => (
                       <tr key={o._id} className="border-t">
                         <td className="p-2">
-                          {o.firstName} {o.lastName}
+                          {o.shippingAddress?.fullName || 'Unknown'}
+                          <br />
+                          <span className="text-xs text-neutral-500">
+                            {o.user?.email}
+                          </span>
                         </td>
+
                         <td className="p-2">
-                          {o.cart?.map((c: any) => c.title).join(', ')}
+                          {o.items.map((i: any) => i.title).join(', ')}
                         </td>
-                        <td className="p-2">₹{o.total}</td>
+
+                        <td className="p-2">₹{o.totalAmount}</td>
+
                         <td className="p-2">
                           <select
-                            value={o.status?.toLowerCase() || "pending"}
+                            value={o.orderStatus}
                             onChange={e =>
-                              handleStatusChange(
-                                o._id,
-                                e.target.value as OrderStatus
-                              )
+                              handleStatusChange(o.orderId, e.target.value as OrderStatus)
                             }
                             className="border border-neutral-300 rounded-lg px-2 py-1 text-sm bg-white"
                           >
-                            <option value="pending">Pending</option>
-                            <option value="processing">Processing</option>
-                            <option value="shipped">Shipped</option>
-                            <option value="delivered">Delivered</option>
-                            <option value="cancelled">Cancelled</option>
+                            <option value="PLACED">Placed</option>
+                            <option value="CONFIRMED">Confirmed</option>
+                            <option value="SHIPPED">Shipped</option>
+                            <option value="DELIVERED">Delivered</option>
+                            <option value="CANCELLED">Cancelled</option>
+                            <option value="RETURNED">Returned</option>
                           </select>
                         </td>
                       </tr>
@@ -344,6 +378,9 @@ export function AdminDashboard() {
         </div>
       </div>
 
+      {/* --------------------------------------------------
+          MODAL
+      --------------------------------------------------- */}
       {showModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999]">
           <div className="bg-white p-6 rounded-xl w-full max-w-md shadow-2xl">

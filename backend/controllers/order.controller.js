@@ -164,3 +164,23 @@ exports.downloadInvoice = async (req, res) => {
     res.status(500).json({ message: "Failed to generate invoice" });
   }
 };
+// ---------------------------------------------------------
+// 6️⃣ ADMIN - GET ALL ORDERS
+// ---------------------------------------------------------
+exports.getAllOrdersAdmin = async (req, res) => {
+  try {
+    const orders = await Order.find()
+      .populate("user", "name email") // only fetch name + email
+      .populate("items.artwork", "title price images") // show artwork info
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      count: orders.length,
+      orders,
+    });
+  } catch (err) {
+    console.error("Admin get all orders error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
