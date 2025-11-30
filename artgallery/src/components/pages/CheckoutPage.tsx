@@ -26,7 +26,7 @@ export function CheckoutPage() {
     country: "India",
   });
 
-  const updateForm = (e) => {
+  const updateForm = (e: any) => {
     setForm({ ...form, [e.target.id]: e.target.value });
   };
 
@@ -38,7 +38,7 @@ export function CheckoutPage() {
   const shipping = subtotal > 1500 ? 0 : 50;
   const total = subtotal + shipping;
 
-  const userId = user?._id; // 🔥 FIX — correct user ID
+  const userId = user?._id;
 
   // -------------------------------------------------------------
   // Load Razorpay script
@@ -86,9 +86,9 @@ export function CheckoutPage() {
   };
 
   // -------------------------------------------------------------
-  // Initiate Payment (create Razorpay order)
+  // Initiate Payment
   // -------------------------------------------------------------
-  const initiatePayment = async (orderId) => {
+  const initiatePayment = async (orderId: string) => {
     const res = await axios.post("http://localhost:5000/api/payment/initiate", {
       orderId,
     });
@@ -96,9 +96,9 @@ export function CheckoutPage() {
   };
 
   // -------------------------------------------------------------
-  // Open Razorpay Checkout
+  // Open Razorpay (with redirect fix)
   // -------------------------------------------------------------
-  const openRazorpay = async (paymentInit, orderObj) => {
+  const openRazorpay = async (paymentInit: any, orderObj: any) => {
     const loaded = await loadRazorpayScript();
     if (!loaded) {
       toast.error("Failed to load Razorpay.");
@@ -113,20 +113,38 @@ export function CheckoutPage() {
       description: "Order Payment",
       order_id: paymentInit.razorpayOrder.id,
 
-      handler: async function (response) {
-        const verify = await axios.post(
-          "http://localhost:5000/api/payment/verify",
-          response
-        );
+      handler: async function (response: any) {
+        console.log("🔥 HANDLER FIRED");
+        console.log("Response:", response);
+        console.log("Order Obj:", orderObj);
 
-        if (verify.data.success) {
-          toast.success("Payment Successful!");
-          localStorage.setItem("lastOrderId", orderObj.orderId);
-          clearCart();
-          navigate("/order-success");
-        } else {
-          toast.error("Payment verification failed");
-          navigate("/payment-failed");
+        try {
+          const verify = await axios.post(
+            "http://localhost:5000/api/payment/verify",
+            response
+          );
+
+          console.log("Verification Response:", verify.data);
+
+          if (verify.data.success) {
+            toast.success("Payment Successful!");
+
+            localStorage.setItem("lastOrderId", orderObj.orderId);
+            clearCart();
+
+            console.log("➡ Redirecting to /order-success");
+
+            // ⭐⭐ FINAL FIX ⭐⭐
+            window.location.href = "/order-success";
+
+          } else {
+            toast.error("Payment verification failed");
+            window.location.href = "/payment-failed";
+          }
+
+        } catch (error) {
+          console.error("🔥 Handler crashed:", error);
+          toast.error("Verification failed");
         }
       },
 
@@ -139,13 +157,13 @@ export function CheckoutPage() {
       theme: { color: "#FFC107" },
     };
 
-    new window.Razorpay(options).open();
+    new (window as any).Razorpay(options).open();
   };
 
   // -------------------------------------------------------------
-  // Handle form submit
+  // Handle Submit
   // -------------------------------------------------------------
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
 
     if (!userId) {
@@ -157,9 +175,10 @@ export function CheckoutPage() {
     try {
       const orderObj = await createOrderInDB();
       const paymentInit = await initiatePayment(orderObj.orderId);
+
       await openRazorpay(paymentInit, orderObj);
     } catch (err) {
-      console.error(err);
+      console.error("Submit error:", err);
       toast.error("Something went wrong");
     }
   };
@@ -170,7 +189,7 @@ export function CheckoutPage() {
   }
 
   // -------------------------------------------------------------
-  // UI STARTS HERE (unchanged UI)
+  // UI (unchanged)
   // -------------------------------------------------------------
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -179,10 +198,11 @@ export function CheckoutPage() {
 
         <form onSubmit={handleSubmit}>
           <div className="grid lg:grid-cols-3 gap-8">
-            {/* LEFT SIDE: SHIPPING + PAYMENT */}
+
+            {/* LEFT SIDE */}
             <div className="lg:col-span-2 space-y-6">
-              
-              {/* Shipping Info */}
+
+              {/* SHIPPING */}
               <div className="bg-white rounded-2xl p-6 shadow-sm">
                 <h2 className="font-serif text-neutral-900 mb-6">Shipping Information</h2>
 
@@ -234,7 +254,7 @@ export function CheckoutPage() {
                 </div>
               </div>
 
-              {/* Payment Section */}
+              {/* PAYMENT METHOD */}
               <div className="bg-white rounded-2xl p-6 shadow-sm">
                 <h2 className="font-serif text-neutral-900 mb-6">Payment Method</h2>
 
@@ -258,7 +278,7 @@ export function CheckoutPage() {
 
             </div>
 
-            {/* RIGHT SIDE: ORDER SUMMARY */}
+            {/* RIGHT SIDE */}
             <div className="lg:col-span-1">
               <div className="bg-white rounded-2xl p-6 shadow-sm sticky top-24">
                 <h2 className="font-serif text-neutral-900 mb-6">Order Summary</h2>
@@ -284,7 +304,6 @@ export function CheckoutPage() {
                   ))}
                 </div>
 
-                {/* Price summary */}
                 <div className="border-t border-neutral-200 pt-4 space-y-3 mb-6">
                   <div className="flex justify-between text-neutral-600">
                     <span>Subtotal</span>
@@ -307,6 +326,7 @@ export function CheckoutPage() {
                 <Button type="submit" className="w-full bg-amber-700 hover:bg-amber-800 rounded-lg py-6">
                   Place Order
                 </Button>
+
               </div>
             </div>
 

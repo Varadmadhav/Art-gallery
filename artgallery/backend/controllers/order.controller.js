@@ -1,9 +1,9 @@
 const Order = require("../models/Order");
+const Payment = require("../models/payment.model");
+const generateInvoice = require("../utils/invoiceGenerator");
 
 // Utility: Generate Amazon-style Order Id
-const generateOrderId = () => {
-  return "ORD_" + Date.now();
-};
+const generateOrderId = () => "ORD_" + Date.now();
 
 
 // ---------------------------------------------------------
@@ -47,7 +47,7 @@ exports.createOrder = async (req, res) => {
 
 
 // ---------------------------------------------------------
-// 2️⃣ GET SINGLE ORDER (Full Details)
+// 2️⃣ GET SINGLE ORDER
 // ---------------------------------------------------------
 exports.getOrder = async (req, res) => {
   try {
@@ -62,7 +62,6 @@ exports.getOrder = async (req, res) => {
     }
 
     res.json(order);
-
   } catch (err) {
     console.error("Get order error:", err);
     res.status(500).json({ message: "Server error" });
@@ -82,7 +81,6 @@ exports.getUserOrders = async (req, res) => {
       .populate("payment");
 
     res.json(orders);
-
   } catch (err) {
     console.error("Get user orders error:", err);
     res.status(500).json({ message: "Server error" });
@@ -125,9 +123,44 @@ exports.updateOrderStatus = async (req, res) => {
       message: "Order status updated",
       order,
     });
-
   } catch (err) {
     console.error("Update status error:", err);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+// ---------------------------------------------------------
+// 5️⃣ DOWNLOAD INVOICE PDF
+// ---------------------------------------------------------
+exports.downloadInvoice = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const order = await Order.findOne({ orderId })
+      .populate("payment")
+      .populate("user");
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    const payment = await Payment.findById(order.payment);
+    if (!payment) {
+      return res.status(404).json({ message: "Payment not found" });
+    }
+
+    const pdfBuffer = await generateInvoice(order, payment);
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=Invoice_${orderId}.pdf`
+    );
+
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error("Invoice error:", err);
+    res.status(500).json({ message: "Failed to generate invoice" });
   }
 };

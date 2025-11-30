@@ -81,7 +81,7 @@ const paymentSchema = new mongoose.Schema(
     // Payment lifecycle
     status: {
       type: String,
-      enum: ["CREATED", "SUCCESS", "FAILED"],
+      enum: ["CREATED", "PENDING", "SUCCESS", "FAILED"],
       default: "CREATED",
     },
   },

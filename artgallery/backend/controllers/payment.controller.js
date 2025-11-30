@@ -3,41 +3,41 @@ const crypto = require("crypto");
 const Order = require("../models/Order");
 const Payment = require("../models/payment.model");
 
-// Initialize Razorpay instance
+// Razorpay instance
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-// ---------------------------------------------------------
-// 1️⃣ INITIATE PAYMENT (Create Razorpay Order)
-// ---------------------------------------------------------
+// -------------------------------------------------------
+// 1️⃣ INITIATE PAYMENT
+// -------------------------------------------------------
 exports.initiatePayment = async (req, res) => {
   try {
     const { orderId } = req.body;
 
     const order = await Order.findOne({ orderId });
     if (!order) {
-      return res.status(404).json({ message: "Order not found" });
+      return res.status(404).json({ message: "Order Not Found" });
     }
 
-    // Create Razorpay order
+    // Create Razorpay Order
     const razorpayOrder = await razorpay.orders.create({
       amount: order.totalAmount * 100,
       currency: "INR",
       receipt: order.orderId,
     });
 
-    // Create Payment entry
+    // Create Payment Entry
     const payment = await Payment.create({
       order: order._id,
       razorpayOrderId: razorpayOrder.id,
       amount: order.totalAmount,
       currency: "INR",
-      status: "PENDING",
+      status: "PENDING", // allowed in schema now
     });
 
-    // Attach payment ID to order
+    // Link payment in Order
     order.payment = payment._id;
     await order.save();
 
@@ -55,9 +55,10 @@ exports.initiatePayment = async (req, res) => {
   }
 };
 
-// ---------------------------------------------------------
-// 2️⃣ VERIFY PAYMENT (After User Completes Payment)
-// ---------------------------------------------------------
+
+// -------------------------------------------------------
+// 2️⃣ VERIFY PAYMENT
+// -------------------------------------------------------
 exports.verifyPayment = async (req, res) => {
   try {
     const {
@@ -66,67 +67,63 @@ exports.verifyPayment = async (req, res) => {
       razorpay_signature,
     } = req.body;
 
-    // Validate signature
-    const body = razorpay_order_id + "|" + razorpay_payment_id;
+    const payload = razorpay_order_id + "|" + razorpay_payment_id;
 
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-      .update(body.toString())
+      .update(payload)
       .digest("hex");
 
-    const isAuthentic = expectedSignature === razorpay_signature;
+    const isValid = expectedSignature === razorpay_signature;
 
-    // Find payment record
+    // Fetch payment record
     const payment = await Payment.findOne({
       razorpayOrderId: razorpay_order_id,
     }).populate("order");
 
     if (!payment)
-      return res.status(404).json({ message: "Payment not found" });
+      return res.status(404).json({ success: false, message: "Payment not found" });
 
-    const order = payment.order;
-
-    // If signature matched → fetch full payment details
-    if (isAuthentic) {
-      // 3️⃣ Fetch full Razorpay payment object
-      const paymentDetails = await razorpay.payments.fetch(
-        razorpay_payment_id
-      );
-
-      // 4️⃣ Update payment entry with all extra info
+    // ------------------------------------
+    // SUCCESS
+    // ------------------------------------
+    if (isValid) {
       payment.razorpayPaymentId = razorpay_payment_id;
       payment.razorpaySignature = razorpay_signature;
-
-      payment.method = paymentDetails.method; // upi / card / netbanking / wallet
-      payment.bank = paymentDetails.bank || null;
-      payment.wallet = paymentDetails.wallet || null;
-      payment.card_id = paymentDetails.card_id || null;
-      payment.vpa = paymentDetails.vpa || null;
-      payment.email = paymentDetails.email || null;
-      payment.contact = paymentDetails.contact || null;
-
       payment.status = "SUCCESS";
+
+      // Fetch method details
+      const rpPayment = await razorpay.payments.fetch(razorpay_payment_id);
+      payment.method = rpPayment.method;
+      payment.bank = rpPayment.bank || null;
+      payment.wallet = rpPayment.wallet || null;
+      payment.card_id = rpPayment.card_id || null;
+      payment.vpa = rpPayment.vpa || null;
+      payment.email = rpPayment.email || null;
+      payment.contact = rpPayment.contact || null;
+
       await payment.save();
 
-      // 5️⃣ Update order
-      order.paymentStatus = "PAID";
-      order.orderStatus = "CONFIRMED";
-      await order.save();
+      // Update order
+      payment.order.paymentStatus = "PAID";
+      payment.order.orderStatus = "CONFIRMED";
+      await payment.order.save();
 
       return res.json({
         success: true,
         message: "Payment verified successfully",
-        payment,
       });
     }
 
-    // ❌ Signature mismatch → FAILED
+    // ------------------------------------
+    // FAILURE
+    // ------------------------------------
     payment.status = "FAILED";
     await payment.save();
 
-    order.paymentStatus = "FAILED";
-    order.orderStatus = "CANCELLED";
-    await order.save();
+    payment.order.paymentStatus = "FAILED";
+    payment.order.orderStatus = "CANCELLED";
+    await payment.order.save();
 
     return res.json({
       success: false,
@@ -134,6 +131,6 @@ exports.verifyPayment = async (req, res) => {
     });
   } catch (err) {
     console.error("Payment verification error:", err);
-    res.status(500).json({ message: "Server error during verification" });
+    res.status(500).json({ message: "Verification failed" });
   }
 };

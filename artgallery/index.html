@@ -2,13 +2,27 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Online Art Gallery UI Design</title>
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>Online Art Gallery</title>
+
+    <!-- Razorpay Checkout Script -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+    <!-- PDF Generator (html2pdf.js) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"
+      integrity="sha512-yx1dEe5JvNysGEKMluSleqU9jwELyhl725LLJoPLD114F8CbnMD4HzyBbs6k8ZZrVSu2VvulaHYodNs/WW5VYg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
   </head>
 
   <body>
     <div id="root"></div>
+
+    <!-- Vite Entry Point -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
