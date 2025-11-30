@@ -1,30 +1,24 @@
-import axios from "axios";
+handler: async (response: any) => {
 
-export default function PayButton({ amount }: { amount: number }) {
-  const payNow = async () => {
-    const order = await axios.post("http://localhost:5000/api/payment/create-order", {
-      amount
-    });
+  // 1️⃣ First verify payment
+  await axios.post("http://localhost:5000/api/payment/verify-payment", response);
 
-    const options = {
-      key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-      amount: order.data.amount,
-      currency: "INR",
-      name: "ArtGallery",
-      order_id: order.data.id,
-      handler: async (response: any) => {
-        await axios.post("http://localhost:5000/api/payment/verify-payment", response);
-        alert("Payment Successful");
-      }
-    };
+  // 2️⃣ Then send checkout details to database
+  await axios.post("http://localhost:5000/api/checkout/create", {
+    name: checkoutForm.name,
+    email: checkoutForm.email,
+    phone: checkoutForm.phone,
+    address: checkoutForm.address,
+    city: checkoutForm.city,
+    zip: checkoutForm.zip,
 
-    const rzp = new window.Razorpay(options);
-    rzp.open();
-  };
+    amount,
+    paymentId: response.razorpay_payment_id,
+    orderId: response.razorpay_order_id,
+    signature: response.razorpay_signature,
 
-  return (
-    <button onClick={payNow}>
-      Pay Now
-    </button>
-  );
+    status: "PAID",
+  });
+
+  alert("Order Placed Successfully!");
 }
