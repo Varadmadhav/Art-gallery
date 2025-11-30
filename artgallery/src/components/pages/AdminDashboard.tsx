@@ -50,7 +50,8 @@ export function AdminDashboard() {
     const fetchData = async () => {
       try {
         const artworksRes = await axios.get('http://localhost:5000/api/artworks')
-        const ordersRes = await axios.get('http://localhost:5000/api/checkout')
+        const ordersRes = await axios.get( 'http://localhost:5000/api/order',
+  tokenHeader)
 
         const formatted = artworksRes.data.map((a: any) => ({
           ...a,
@@ -58,7 +59,7 @@ export function AdminDashboard() {
         }))
 
         setArtworks(formatted)
-        setOrders(ordersRes.data.orders || ordersRes.data)
+        setOrders(ordersRes.data)
       } catch (error) {
         console.log(error)
       } finally {
@@ -161,7 +162,7 @@ export function AdminDashboard() {
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
     try {
       await axios.put(
-        `http://localhost:5000/api/checkout/${orderId}/status`,
+        `http://localhost:5000/api/order/${orderId}/status`,
         { status: newStatus },
         tokenHeader
       )
@@ -239,7 +240,7 @@ export function AdminDashboard() {
 
                 <div className="bg-white p-6 rounded-2xl shadow-sm">
                   <div className="text-2xl font-serif">
-                    ₹{orders.reduce((s, o) => s + (o.total || 0), 0)}
+                    ₹{orders.reduce((s, o) => s + (o.totalAmount || 0), 0)}
                   </div>
                   <div className="text-sm text-neutral-500">Revenue</div>
                 </div>
@@ -306,37 +307,46 @@ export function AdminDashboard() {
                       <th className="text-left p-2">Status</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {orders.map(o => (
-                      <tr key={o._id} className="border-t">
-                        <td className="p-2">
-                          {o.firstName} {o.lastName}
-                        </td>
-                        <td className="p-2">
-                          {o.cart?.map((c: any) => c.title).join(', ')}
-                        </td>
-                        <td className="p-2">₹{o.total}</td>
-                        <td className="p-2">
-                          <select
-                            value={o.status?.toLowerCase() || "pending"}
-                            onChange={e =>
-                              handleStatusChange(
-                                o._id,
-                                e.target.value as OrderStatus
-                              )
-                            }
-                            className="border border-neutral-300 rounded-lg px-2 py-1 text-sm bg-white"
-                          >
-                            <option value="pending">Pending</option>
-                            <option value="processing">Processing</option>
-                            <option value="shipped">Shipped</option>
-                            <option value="delivered">Delivered</option>
-                            <option value="cancelled">Cancelled</option>
-                          </select>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
+                        <tbody>
+        {orders.map(o => (
+          <tr key={o._id} className="border-t">
+            
+            {/* customer */}
+            <td className="p-2">
+              {o.user?.name || "Guest"}
+            </td>
+
+            {/* artworks */}
+            <td className="p-2">
+              {o.items?.map((i: any) => i.artwork?.title).join(", ")}
+            </td>
+
+            {/* total */}
+            <td className="p-2">
+              ₹{o.totalAmount}
+            </td>
+
+            {/* status */}
+            <td className="p-2">
+              <select
+                value={o.status}
+                onChange={e =>
+                  handleStatusChange(o._id, e.target.value as OrderStatus)
+                }
+                className="border border-neutral-300 rounded-lg px-2 py-1 text-sm bg-white"
+              >
+                <option value="pending">Pending</option>
+                <option value="processing">Processing</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </td>
+
+          </tr>
+        ))}
+      </tbody>
+
                 </table>
               </div>
             )}

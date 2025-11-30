@@ -39,10 +39,11 @@ export function CheckoutPage() {
     });
 
     const order = orderRes.data;
-    const { VITE_RAZORPAY_KEY_ID } = import.meta.env;
+    const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY;
+
 
     const options = {
-      key: VITE_RAZORPAY_KEY_ID,
+      key: razorpayKey,
       amount: order.amount,
       currency: "INR",
       name: "ArtGallery",

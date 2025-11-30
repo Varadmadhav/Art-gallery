@@ -23,6 +23,7 @@ export interface CartItem {
 }
 
 interface UserType {
+  _id: string
   name: string
   email: string
   token: string
@@ -208,12 +209,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         password
       })
 
-      const userData: UserType = {
-        name: data.name,
-        email: data.email,
-        token: data.token,
-        isAdmin: data.role === 'admin'
-      }
+      localStorage.setItem("userId", data._id);
+
+    const userData: UserType = {
+    _id: data._id,
+    name: data.name,
+    email: data.email,
+    token: data.token,
+    isAdmin: data.role === 'admin',
+    }
 
       // read carts BEFORE changing user state
       const guestCartStr = localStorage.getItem(GUEST_CART_KEY)
