@@ -3,3 +3,11 @@ dist/
 .env
 .vscode/
 backend/node_modules/
+backend/uploads/
+
+*.log
+.DS_Store
+Thumbs.db
+build/
+.env.local
+.env.production

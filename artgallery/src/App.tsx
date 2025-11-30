@@ -17,6 +17,13 @@ import { AppProvider, useApp } from './context/AppContext';
 import { NewsletterPopup } from './components/NewsletterPopup';
 import { Toaster } from './components/ui/sonner';
 
+// ⭐ NEW IMPORT FOR SHIPPING PAGE & PRIVACY POLICY & TERMS AND CONDITION
+import ShippingReturnsPage from './components/pages/ShippingReturnsPage';
+import PrivacyPolicyPage from './components/pages/PrivacyPolicyPage';
+import TncPage from './components/pages/TncPage';
+import ContactPage from './components/pages/ContactPage';
+
+
 // 🔒 LOGIN REQUIRED
 function RequireAuth({ children }: { children: JSX.Element }) {
   const { user } = useApp();
@@ -24,7 +31,7 @@ function RequireAuth({ children }: { children: JSX.Element }) {
   return children;
 }
 
-// 🔒 ADMIN ONLY ROUTE
+// 🔒 ADMIN ONLY
 function RequireAdmin({ children }: { children: JSX.Element }) {
   const { user } = useApp();
   if (!user) return <Navigate to="/login" replace />;
@@ -50,16 +57,18 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
 
-            {/* 🔒 LOGGED-IN USERS ONLY */}
-            <Route
-              path="/cart"
-              element={
-                <RequireAuth>
-                  <CartPage />
-                </RequireAuth>
-              }
-            />
+            {/* ⭐ NEW SHIPPING & RETURNS ROUTE & Privacy Policy Route & Terms and Condition Route & Contact page rooute*/}
+            <Route path="/shipping-returns" element={<ShippingReturnsPage />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+            <Route path="/terms" element={<TncPage />} />
+            <Route path="/contact" element={<ContactPage />} />
 
+
+
+            {/* 🔓 CART IS PUBLIC */}
+            <Route path="/cart" element={<CartPage />} />
+
+            {/* 🔒 LOGGED-IN USERS ONLY */}
             <Route
               path="/checkout"
               element={
