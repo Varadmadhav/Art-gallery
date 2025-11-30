@@ -15,6 +15,7 @@ import { BlogDetailPage } from "./components/pages/BlogDetailPage";
 import { CommissionPage } from "./components/pages/CommissionPage";
 import { AboutPage } from "./components/pages/AboutPage";
 import { WishlistPage } from "./components/pages/WishlistPage";
+import MyOrders from "./components/pages/MyOrders";
 
 import ShippingReturnsPage from "./components/pages/ShippingReturnsPage";
 import PrivacyPolicyPage from "./components/pages/PrivacyPolicyPage";
@@ -55,10 +56,10 @@ export default function App() {
       <Router>
 
         <Routes>
-          {/* ⭐ Page WITHOUT Layout (no header/footer) */}
+          {/* Page WITHOUT Layout */}
           <Route path="/order-success" element={<OrderSuccessPage />} />
 
-          {/* ⭐ All pages WITH Layout */}
+          {/* All pages WITH Layout */}
           <Route element={<Layout />}>
 
             {/* Public Pages */}
@@ -72,7 +73,7 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
 
-            {/* Static Policy Pages */}
+            {/* Static Pages */}
             <Route path="/shipping-returns" element={<ShippingReturnsPage />} />
             <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
             <Route path="/terms" element={<TncPage />} />
@@ -81,7 +82,15 @@ export default function App() {
             {/* Cart */}
             <Route path="/cart" element={<CartPage />} />
 
-            {/* ⭐ Auth Required */}
+            {/* Auth Protected */}
+            <Route
+              path="/orders"
+              element={
+                <RequireAuth>
+                  <MyOrders />
+                </RequireAuth>
+              }
+            />
             <Route
               path="/checkout"
               element={
@@ -90,7 +99,6 @@ export default function App() {
                 </RequireAuth>
               }
             />
-
             <Route
               path="/wishlist"
               element={
@@ -100,7 +108,7 @@ export default function App() {
               }
             />
 
-            {/* ⭐ Admin */}
+            {/* Admin */}
             <Route
               path="/admin"
               element={

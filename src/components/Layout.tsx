@@ -71,23 +71,40 @@ export function Layout() {
                 )}
               </Link>
 
-              {/* User */}
+              {/* USER (⭐ UPDATED PART) */}
               {user ? (
                 <div className="hidden lg:flex items-center space-x-3">
+
+                  {/* ADMIN BUTTON */}
                   {user.isAdmin && (
                     <Link to="/admin">
-                      <Button variant="outline" size="sm">Admin</Button>
+                      <Button variant="outline" size="sm" className="rounded-lg">
+                        Admin Dashboard
+                      </Button>
                     </Link>
                   )}
-                  <Button variant="ghost" size="sm" onClick={logout}>Logout</Button>
+
+                  {/* NORMAL USER BUTTON */}
+                  {!user.isAdmin && (
+                    <Link to="/orders">
+                      <Button variant="outline" size="sm" className="rounded-lg">
+                        My Orders
+                      </Button>
+                    </Link>
+                  )}
+
+                  {/* LOGOUT */}
+                  <Button variant="ghost" size="sm" onClick={logout}>
+                    Logout
+                  </Button>
                 </div>
               ) : (
                 <Link to="/login" className="hidden lg:block">
-                  <Button variant="outline" size="sm">Login</Button>
+                  <Button variant="outline" size="sm" className="rounded-lg">Login</Button>
                 </Link>
               )}
 
-              {/* Mobile Menu Trigger */}
+              {/* MOBILE MENU TRIGGER */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="lg:hidden p-2 text-neutral-700"
@@ -110,11 +127,22 @@ export function Layout() {
 
               {user ? (
                 <>
+
+                  {/* Admin link */}
                   {user.isAdmin && (
                     <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 hover:text-amber-700">
                       Admin Dashboard
                     </Link>
                   )}
+
+                  {/* User link ⭐ */}
+                  {!user.isAdmin && (
+                    <Link to="/orders" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-neutral-700 hover:text-amber-700">
+                      My Orders
+                    </Link>
+                  )}
+
+                  {/* Logout */}
                   <button
                     onClick={() => { logout(); setMobileMenuOpen(false); }}
                     className="block w-full text-left py-2 text-neutral-700 hover:text-amber-700"
@@ -132,7 +160,7 @@ export function Layout() {
         )}
       </header>
 
-      {/* ⭐ MAIN CONTENT (IMPORTANT) */}
+      {/* MAIN CONTENT */}
       <main className="flex-1">
         <Outlet />
       </main>
