@@ -1,91 +1,133 @@
-const Order = require("../models/Order")
-const User = require("../models/User")
-const Artwork = require("../models/Artwork")
+const Order = require("../models/Order");
 
-exports.getAllOrders = async (req, res) => {
+// Utility: Generate Amazon-style Order Id
+const generateOrderId = () => {
+  return "ORD_" + Date.now();
+};
+
+
+// ---------------------------------------------------------
+// 1️⃣ CREATE ORDER (Before Payment)
+// ---------------------------------------------------------
+exports.createOrder = async (req, res) => {
   try {
-    const orders = await Order.find()
-      .populate("user", "name email")
-      .populate("items.artwork", "title image price")
-      .sort({ createdAt: -1 })
+    const { userId, items, shippingAddress, totalAmount } = req.body;
 
-    res.status(200).json(orders)
-  } catch (err) {
-    res.status(500).json({ message: err.message })
-  }
-}
+    if (!items || items.length === 0) {
+      return res.status(400).json({ message: "No items provided" });
+    }
 
-exports.getAdminStats = async (req, res) => {
-  try {
-    const totalOrders = await Order.countDocuments()
+    if (!shippingAddress) {
+      return res.status(400).json({ message: "Shipping address required" });
+    }
 
-    const totalSalesAgg = await Order.aggregate([
-      { $group: { _id: null, total: { $sum: "$totalAmount" } } }
-    ])
+    // Create Amazon-style order id
+    const orderId = generateOrderId();
 
-    const totalSales = totalSalesAgg.length ? totalSalesAgg[0].total : 0
-
-    const totalArtworks = await Artwork.countDocuments()
-
-    const totalCustomers = await User.countDocuments({ role: "user" })
+    const newOrder = await Order.create({
+      orderId,
+      user: userId,
+      items,
+      shippingAddress,
+      totalAmount,
+      paymentStatus: "PENDING",
+      orderStatus: "PLACED",
+    });
 
     res.json({
-      totalOrders,
-      totalSales,
-      totalArtworks,
-      totalCustomers
-    })
-
-  } catch (error) {
-    res.status(500).json({ message: error.message })
+      success: true,
+      message: "Order created successfully",
+      order: newOrder,
+    });
+  } catch (err) {
+    console.error("Create order error:", err);
+    res.status(500).json({ message: "Server error" });
   }
-}
+};
 
-exports.getRecentOrders = async (req, res) => {
+
+// ---------------------------------------------------------
+// 2️⃣ GET SINGLE ORDER (Full Details)
+// ---------------------------------------------------------
+exports.getOrder = async (req, res) => {
   try {
-    const orders = await Order.find()
-      .populate("user", "name email")
-      .populate("items.artwork", "title")
+    const { orderId } = req.params;
+
+    const order = await Order.findOne({ orderId })
+      .populate("payment")
+      .populate("user");
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.json(order);
+
+  } catch (err) {
+    console.error("Get order error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+// ---------------------------------------------------------
+// 3️⃣ GET ALL ORDERS FOR USER
+// ---------------------------------------------------------
+exports.getUserOrders = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const orders = await Order.find({ user: userId })
       .sort({ createdAt: -1 })
-      .limit(10)
+      .populate("payment");
 
-    res.json(orders)
-  } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.json(orders);
+
+  } catch (err) {
+    console.error("Get user orders error:", err);
+    res.status(500).json({ message: "Server error" });
   }
-}
+};
 
-exports.getCustomersFromOrders = async (req, res) => {
+
+// ---------------------------------------------------------
+// 4️⃣ UPDATE ORDER STATUS (Admin / System)
+// ---------------------------------------------------------
+exports.updateOrderStatus = async (req, res) => {
   try {
-    const customers = await Order.aggregate([
-      {
-        $group: {
-          _id: "$user",
-          orders: { $sum: 1 },
-          spent: { $sum: "$totalAmount" }
-        }
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "_id",
-          foreignField: "_id",
-          as: "user"
-        }
-      },
-      { $unwind: "$user" },
-      {
-        $project: {
-          name: "$user.name",
-          email: "$user.email",
-          orders: 1,
-          spent: 1
-        }
-      }
-    ])
+    const { orderId } = req.params;
+    const { status } = req.body;
 
-    res.json(customers)
-  } catch (error) {
-    res.status(500).json({ message: error.message })
+    const validStatuses = [
+      "PLACED",
+      "CONFIRMED",
+      "SHIPPED",
+      "DELIVERED",
+      "CANCELLED",
+      "RETURNED",
+    ];
+
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: "Invalid order status" });
+    }
+
+    const order = await Order.findOne({ orderId });
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    order.orderStatus = status;
+    await order.save();
+
+    res.json({
+      success: true,
+      message: "Order status updated",
+      order,
+    });
+
+  } catch (err) {
+    console.error("Update status error:", err);
+    res.status(500).json({ message: "Server error" });
   }
-}
+};

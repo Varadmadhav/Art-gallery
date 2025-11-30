@@ -1,16 +1,14 @@
 const express = require("express");
-const { createOrder, verifyPayment } = require("../controllers/payment.controller");
-
 const router = express.Router();
+const {
+  initiatePayment,
+  verifyPayment,
+} = require("../controllers/payment.controller");
 
-// Return Razorpay Key to Frontend
-router.get("/get-key", (req, res) => {
-  res.status(200).json({
-    key: process.env.RAZORPAY_KEY_ID
-  });
-});
+// Create Razorpay Order
+router.post("/initiate", initiatePayment);
 
-router.post("/create-order", createOrder);
-router.post("/verify-payment", verifyPayment);
+// Verify Razorpay Payment
+router.post("/verify", verifyPayment);
 
 module.exports = router;

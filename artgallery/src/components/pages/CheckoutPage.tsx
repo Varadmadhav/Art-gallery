@@ -5,13 +5,14 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { useApp } from '../../context/AppContext';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import axios from 'axios';
 
 export function CheckoutPage() {
-  const { cart, clearCart } = useApp();
+  const { cart, clearCart, user } = useApp();
   const navigate = useNavigate();
-  const [paymentMethod, setPaymentMethod] = useState('razorpay');
+
+  const [paymentMethod, setPaymentMethod] = useState("razorpay");
 
   const [form, setForm] = useState({
     firstName: "",
@@ -22,94 +23,155 @@ export function CheckoutPage() {
     city: "",
     state: "",
     zip: "",
-    country: "",
+    country: "India",
   });
 
-  const updateForm = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const updateForm = (e) => {
     setForm({ ...form, [e.target.id]: e.target.value });
   };
 
-  const subtotal = cart.reduce((sum, item) => sum + item.artwork.price * item.quantity, 0);
+  const subtotal = cart.reduce(
+    (sum, item) => sum + item.artwork.price * item.quantity,
+    0
+  );
+
   const shipping = subtotal > 1500 ? 0 : 50;
   const total = subtotal + shipping;
 
-  const handleRazorpayPayment = async () => {
-    const orderRes = await axios.post("http://localhost:5000/api/payment/create-order", {
-      amount: total
+  const userId = user?._id; // 🔥 FIX — correct user ID
+
+  // -------------------------------------------------------------
+  // Load Razorpay script
+  // -------------------------------------------------------------
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  // -------------------------------------------------------------
+  // Create Order in DB
+  // -------------------------------------------------------------
+  const createOrderInDB = async () => {
+    const shippingAddress = {
+      fullName: form.firstName + " " + form.lastName,
+      phone: form.phone,
+      addressLine1: form.address,
+      addressLine2: "",
+      city: form.city,
+      state: form.state,
+      postalCode: form.zip,
+      country: form.country,
+    };
+
+    const items = cart.map((item) => ({
+      artwork: item.artwork._id,
+      title: item.artwork.title,
+      quantity: item.quantity,
+      price: item.artwork.price,
+    }));
+
+    const res = await axios.post("http://localhost:5000/api/order/create", {
+      userId,
+      items,
+      shippingAddress,
+      totalAmount: total,
     });
 
-    const order = orderRes.data;
-    const { VITE_RAZORPAY_KEY_ID } = import.meta.env;
+    return res.data.order;
+  };
+
+  // -------------------------------------------------------------
+  // Initiate Payment (create Razorpay order)
+  // -------------------------------------------------------------
+  const initiatePayment = async (orderId) => {
+    const res = await axios.post("http://localhost:5000/api/payment/initiate", {
+      orderId,
+    });
+    return res.data;
+  };
+
+  // -------------------------------------------------------------
+  // Open Razorpay Checkout
+  // -------------------------------------------------------------
+  const openRazorpay = async (paymentInit, orderObj) => {
+    const loaded = await loadRazorpayScript();
+    if (!loaded) {
+      toast.error("Failed to load Razorpay.");
+      return;
+    }
 
     const options = {
-      key: VITE_RAZORPAY_KEY_ID,
-      amount: order.amount,
+      key: paymentInit.key,
+      amount: paymentInit.amount * 100,
       currency: "INR",
       name: "ArtGallery",
-      order_id: order.id,
+      description: "Order Payment",
+      order_id: paymentInit.razorpayOrder.id,
 
-      handler: async function (response: any) {
+      handler: async function (response) {
         const verify = await axios.post(
-          "http://localhost:5000/api/payment/verify-payment",
-          {
-            ...response,
-            orderData: {
-              userId: localStorage.getItem("userId") || null,
-              cart: cart.map((item) => ({
-                artworkId: item.artwork._id,
-                quantity: item.quantity,
-                price: item.artwork.price
-              })),
-              total
-            }
-          }
+          "http://localhost:5000/api/payment/verify",
+          response
         );
 
-        if (verify.data.status === "success") {
+        if (verify.data.success) {
           toast.success("Payment Successful!");
+          localStorage.setItem("lastOrderId", orderObj.orderId);
           clearCart();
-          navigate("/");
+          navigate("/order-success");
         } else {
-          toast.error("Payment verification failed!");
+          toast.error("Payment verification failed");
+          navigate("/payment-failed");
         }
       },
 
       prefill: {
-        name: form.firstName + " " + form.lastName,
+        name: `${form.firstName} ${form.lastName}`,
         email: form.email,
-        contact: form.phone
+        contact: form.phone,
       },
 
       theme: { color: "#FFC107" },
-
-      config: {
-        display: {
-          blocks: {
-            card: { name: "Card", instruments: [{ method: "card" }] }
-          },
-          sequence: ["card"],
-          preferences: { show_default_blocks: false }
-        }
-      }
     };
 
-    const rzp = new window.Razorpay(options);
-    rzp.open();
+    new window.Razorpay(options).open();
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // -------------------------------------------------------------
+  // Handle form submit
+  // -------------------------------------------------------------
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (paymentMethod === "razorpay") {
-      handleRazorpayPayment();
+
+    if (!userId) {
+      toast.error("Please log in to place an order.");
+      navigate("/login");
       return;
+    }
+
+    try {
+      const orderObj = await createOrderInDB();
+      const paymentInit = await initiatePayment(orderObj.orderId);
+      await openRazorpay(paymentInit, orderObj);
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong");
     }
   };
 
   if (cart.length === 0) {
-    navigate('/cart');
+    navigate("/cart");
     return null;
   }
 
+  // -------------------------------------------------------------
+  // UI STARTS HERE (unchanged UI)
+  // -------------------------------------------------------------
   return (
     <div className="min-h-screen bg-neutral-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -117,27 +179,62 @@ export function CheckoutPage() {
 
         <form onSubmit={handleSubmit}>
           <div className="grid lg:grid-cols-3 gap-8">
-
+            {/* LEFT SIDE: SHIPPING + PAYMENT */}
             <div className="lg:col-span-2 space-y-6">
               
+              {/* Shipping Info */}
               <div className="bg-white rounded-2xl p-6 shadow-sm">
                 <h2 className="font-serif text-neutral-900 mb-6">Shipping Information</h2>
 
                 <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input id="firstName" required className="rounded-lg mt-2" onChange={updateForm} />
+                  </div>
 
-                  <div><Label htmlFor="firstName">First Name</Label><Input id="firstName" required className="rounded-lg mt-2" onChange={updateForm} /></div>
-                  <div><Label htmlFor="lastName">Last Name</Label><Input id="lastName" required className="rounded-lg mt-2" onChange={updateForm} /></div>
-                  <div className="sm:col-span-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" required className="rounded-lg mt-2" onChange={updateForm} /></div>
-                  <div className="sm:col-span-2"><Label htmlFor="phone">Phone</Label><Input id="phone" type="tel" required className="rounded-lg mt-2" onChange={updateForm} /></div>
-                  <div className="sm:col-span-2"><Label htmlFor="address">Street Address</Label><Input id="address" required className="rounded-lg mt-2" onChange={updateForm} /></div>
-                  <div><Label htmlFor="city">City</Label><Input id="city" required className="rounded-lg mt-2" onChange={updateForm} /></div>
-                  <div><Label htmlFor="state">State</Label><Input id="state" required className="rounded-lg mt-2" onChange={updateForm} /></div>
-                  <div><Label htmlFor="zip">ZIP</Label><Input id="zip" required className="rounded-lg mt-2" onChange={updateForm} /></div>
-                  <div><Label htmlFor="country">Country</Label><Input id="country" required className="rounded-lg mt-2" onChange={updateForm} /></div>
+                  <div>
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input id="lastName" required className="rounded-lg mt-2" onChange={updateForm} />
+                  </div>
 
+                  <div className="sm:col-span-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" type="email" required className="rounded-lg mt-2" onChange={updateForm} />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input id="phone" type="tel" required className="rounded-lg mt-2" onChange={updateForm} />
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <Label htmlFor="address">Street Address</Label>
+                    <Input id="address" required className="rounded-lg mt-2" onChange={updateForm} />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="city">City</Label>
+                    <Input id="city" required className="rounded-lg mt-2" onChange={updateForm} />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="state">State</Label>
+                    <Input id="state" required className="rounded-lg mt-2" onChange={updateForm} />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="zip">ZIP</Label>
+                    <Input id="zip" required className="rounded-lg mt-2" onChange={updateForm} />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="country">Country</Label>
+                    <Input id="country" required className="rounded-lg mt-2" onChange={updateForm} />
+                  </div>
                 </div>
               </div>
 
+              {/* Payment Section */}
               <div className="bg-white rounded-2xl p-6 shadow-sm">
                 <h2 className="font-serif text-neutral-900 mb-6">Payment Method</h2>
 
@@ -146,7 +243,7 @@ export function CheckoutPage() {
                     type="radio"
                     name="payment"
                     value="razorpay"
-                    checked={paymentMethod === 'razorpay'}
+                    checked={paymentMethod === "razorpay"}
                     onChange={(e) => setPaymentMethod(e.target.value)}
                     className="w-4 h-4"
                   />
@@ -161,6 +258,7 @@ export function CheckoutPage() {
 
             </div>
 
+            {/* RIGHT SIDE: ORDER SUMMARY */}
             <div className="lg:col-span-1">
               <div className="bg-white rounded-2xl p-6 shadow-sm sticky top-24">
                 <h2 className="font-serif text-neutral-900 mb-6">Order Summary</h2>
@@ -169,33 +267,51 @@ export function CheckoutPage() {
                   {cart.map((item) => (
                     <div key={item.artwork._id} className="flex gap-3">
                       <div className="w-16 h-16 rounded-lg overflow-hidden bg-neutral-100">
-                        <img src={item.artwork.image} alt={item.artwork.title} className="w-full h-full object-cover" />
+                        <img
+                          src={item.artwork.image}
+                          alt={item.artwork.title}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-neutral-900 truncate">{item.artwork.title}</p>
                         <p className="text-xs text-neutral-500">Qty: {item.quantity}</p>
-                        <p className="text-sm text-neutral-900">₹{(item.artwork.price * item.quantity).toLocaleString()}</p>
+                        <p className="text-sm text-neutral-900">
+                          ₹{(item.artwork.price * item.quantity).toLocaleString()}
+                        </p>
                       </div>
                     </div>
                   ))}
                 </div>
 
+                {/* Price summary */}
                 <div className="border-t border-neutral-200 pt-4 space-y-3 mb-6">
-                  <div className="flex justify-between text-neutral-600"><span>Subtotal</span><span className="text-neutral-900">₹{subtotal.toLocaleString()}</span></div>
-                  <div className="flex justify-between text-neutral-600"><span>Shipping</span><span className="text-neutral-900">{shipping === 0 ? 'FREE' : `₹${shipping}`}</span></div>
-                  <div className="flex justify-between pt-3 border-t border-neutral-200"><span className="font-serif text-neutral-900">Total</span><span className="font-serif text-amber-700">₹{total.toLocaleString()}</span></div>
+                  <div className="flex justify-between text-neutral-600">
+                    <span>Subtotal</span>
+                    <span className="text-neutral-900">₹{subtotal.toLocaleString()}</span>
+                  </div>
+
+                  <div className="flex justify-between text-neutral-600">
+                    <span>Shipping</span>
+                    <span className="text-neutral-900">
+                      {shipping === 0 ? "FREE" : `₹${shipping}`}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between pt-3 border-t border-neutral-200">
+                    <span className="font-serif text-neutral-900">Total</span>
+                    <span className="font-serif text-amber-700">₹{total.toLocaleString()}</span>
+                  </div>
                 </div>
 
                 <Button type="submit" className="w-full bg-amber-700 hover:bg-amber-800 rounded-lg py-6">
                   Place Order
                 </Button>
-
               </div>
             </div>
 
           </div>
         </form>
-
       </div>
     </div>
   );
