@@ -12,15 +12,70 @@ export function CheckoutPage() {
   const navigate = useNavigate();
   const [paymentMethod, setPaymentMethod] = useState('stripe');
 
+  // ⭐ FORM STATE
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: "",
+    city: "",
+    state: "",
+    zip: "",
+    country: "",
+    cardNumber: "",
+    expiry: "",
+    cvc: ""
+  });
+
+  // ⭐ Input Handler
+  const updateForm = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.id]: e.target.value });
+  };
+
   const subtotal = cart.reduce((sum, item) => sum + item.artwork.price * item.quantity, 0);
   const shipping = subtotal > 1500 ? 0 : 50;
   const total = subtotal + shipping;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // ⭐ UPDATED handleSubmit → Backend Call
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success('Order placed successfully!');
-    clearCart();
-    navigate('/');
+
+    const orderData = {
+      ...form,
+      paymentMethod,
+      cart: cart.map((item) => ({
+        artworkId: item.artwork.id,
+        title: item.artwork.title,
+        image: item.artwork.image,
+        price: item.artwork.price,
+        quantity: item.quantity
+      })),
+      subtotal,
+      shipping,
+      total
+    };
+
+    try {
+      const res = await fetch("http://localhost:5000/api/checkout/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderData)
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        toast.success("Order placed successfully!");
+        clearCart();
+        navigate("/");
+      } else {
+        toast.error("Something went wrong!");
+      }
+
+    } catch (error) {
+      toast.error("Server error!");
+    }
   };
 
   if (cart.length === 0) {
@@ -35,47 +90,57 @@ export function CheckoutPage() {
 
         <form onSubmit={handleSubmit}>
           <div className="grid lg:grid-cols-3 gap-8">
-            {/* Checkout Form */}
+
+            {/* Shipping Information */}
             <div className="lg:col-span-2 space-y-6">
-              {/* Shipping Information */}
+
               <div className="bg-white rounded-2xl p-6 shadow-sm">
                 <h2 className="font-serif text-neutral-900 mb-6">Shipping Information</h2>
+
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="firstName">First Name</Label>
-                    <Input id="firstName" required className="rounded-lg mt-2" />
+                    <Input id="firstName" required className="rounded-lg mt-2" onChange={updateForm} />
                   </div>
+
                   <div>
                     <Label htmlFor="lastName">Last Name</Label>
-                    <Input id="lastName" required className="rounded-lg mt-2" />
+                    <Input id="lastName" required className="rounded-lg mt-2" onChange={updateForm} />
                   </div>
+
                   <div className="sm:col-span-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" required className="rounded-lg mt-2" />
+                    <Input id="email" type="email" required className="rounded-lg mt-2" onChange={updateForm} />
                   </div>
+
                   <div className="sm:col-span-2">
                     <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" type="tel" required className="rounded-lg mt-2" />
+                    <Input id="phone" type="tel" required className="rounded-lg mt-2" onChange={updateForm} />
                   </div>
+
                   <div className="sm:col-span-2">
                     <Label htmlFor="address">Street Address</Label>
-                    <Input id="address" required className="rounded-lg mt-2" />
+                    <Input id="address" required className="rounded-lg mt-2" onChange={updateForm} />
                   </div>
+
                   <div>
                     <Label htmlFor="city">City</Label>
-                    <Input id="city" required className="rounded-lg mt-2" />
+                    <Input id="city" required className="rounded-lg mt-2" onChange={updateForm} />
                   </div>
+
                   <div>
                     <Label htmlFor="state">State / Province</Label>
-                    <Input id="state" required className="rounded-lg mt-2" />
+                    <Input id="state" required className="rounded-lg mt-2" onChange={updateForm} />
                   </div>
+
                   <div>
                     <Label htmlFor="zip">ZIP / Postal Code</Label>
-                    <Input id="zip" required className="rounded-lg mt-2" />
+                    <Input id="zip" required className="rounded-lg mt-2" onChange={updateForm} />
                   </div>
+
                   <div>
                     <Label htmlFor="country">Country</Label>
-                    <Input id="country" required className="rounded-lg mt-2" />
+                    <Input id="country" required className="rounded-lg mt-2" onChange={updateForm} />
                   </div>
                 </div>
               </div>
@@ -83,7 +148,7 @@ export function CheckoutPage() {
               {/* Payment Method */}
               <div className="bg-white rounded-2xl p-6 shadow-sm">
                 <h2 className="font-serif text-neutral-900 mb-6">Payment Method</h2>
-                
+
                 <div className="space-y-4 mb-6">
                   <label className="flex items-center gap-3 p-4 border-2 border-neutral-200 rounded-xl cursor-pointer hover:border-amber-700 transition-colors">
                     <input
@@ -92,7 +157,7 @@ export function CheckoutPage() {
                       value="stripe"
                       checked={paymentMethod === 'stripe'}
                       onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="w-4 h-4 text-amber-700"
+                      className="w-4 h-4"
                     />
                     <CreditCard className="w-5 h-5 text-neutral-600" />
                     <span className="text-neutral-900">Credit Card (Stripe)</span>
@@ -105,7 +170,7 @@ export function CheckoutPage() {
                       value="paypal"
                       checked={paymentMethod === 'paypal'}
                       onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="w-4 h-4 text-amber-700"
+                      className="w-4 h-4"
                     />
                     <span className="text-neutral-900">PayPal</span>
                   </label>
@@ -117,7 +182,7 @@ export function CheckoutPage() {
                       value="razorpay"
                       checked={paymentMethod === 'razorpay'}
                       onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="w-4 h-4 text-amber-700"
+                      className="w-4 h-4"
                     />
                     <span className="text-neutral-900">Razorpay</span>
                   </label>
@@ -127,31 +192,18 @@ export function CheckoutPage() {
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="cardNumber">Card Number</Label>
-                      <Input
-                        id="cardNumber"
-                        placeholder="1234 5678 9012 3456"
-                        required
-                        className="rounded-lg mt-2"
-                      />
+                      <Input id="cardNumber" placeholder="1234 5678 9012 3456" required className="rounded-lg mt-2" onChange={updateForm} />
                     </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="expiry">Expiry Date</Label>
-                        <Input
-                          id="expiry"
-                          placeholder="MM/YY"
-                          required
-                          className="rounded-lg mt-2"
-                        />
+                        <Input id="expiry" placeholder="MM/YY" required className="rounded-lg mt-2" onChange={updateForm} />
                       </div>
+
                       <div>
                         <Label htmlFor="cvc">CVC</Label>
-                        <Input
-                          id="cvc"
-                          placeholder="123"
-                          required
-                          className="rounded-lg mt-2"
-                        />
+                        <Input id="cvc" placeholder="123" required className="rounded-lg mt-2" onChange={updateForm} />
                       </div>
                     </div>
                   </div>
@@ -168,7 +220,7 @@ export function CheckoutPage() {
             <div className="lg:col-span-1">
               <div className="bg-white rounded-2xl p-6 shadow-sm sticky top-24">
                 <h2 className="font-serif text-neutral-900 mb-6">Order Summary</h2>
-                
+
                 <div className="space-y-4 mb-6">
                   {cart.map((item) => (
                     <div key={item.artwork.id} className="flex gap-3">
@@ -179,6 +231,7 @@ export function CheckoutPage() {
                           className="w-full h-full object-cover"
                         />
                       </div>
+
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-neutral-900 truncate">{item.artwork.title}</p>
                         <p className="text-xs text-neutral-500">Qty: {item.quantity}</p>
@@ -195,12 +248,12 @@ export function CheckoutPage() {
                     <span>Subtotal</span>
                     <span className="text-neutral-900">${subtotal.toLocaleString()}</span>
                   </div>
+
                   <div className="flex justify-between text-neutral-600">
                     <span>Shipping</span>
-                    <span className="text-neutral-900">
-                      {shipping === 0 ? 'FREE' : `$${shipping}`}
-                    </span>
+                    <span className="text-neutral-900">{shipping === 0 ? 'FREE' : `$${shipping}`}</span>
                   </div>
+
                   <div className="flex justify-between pt-3 border-t border-neutral-200">
                     <span className="font-serif text-neutral-900">Total</span>
                     <span className="font-serif text-amber-700">${total.toLocaleString()}</span>
@@ -216,6 +269,7 @@ export function CheckoutPage() {
                 </p>
               </div>
             </div>
+
           </div>
         </form>
       </div>
